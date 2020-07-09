@@ -1,0 +1,265 @@
+diff --git a/Makefile b/Makefile
+index fb4e320..2deae55 100644
+--- a/Makefile
++++ b/Makefile
+@@ -178,12 +178,14 @@ ifneq ($(CPU_ONLY), 1)
+        LIBRARIES := cudart cublas curand
+ endif
+ 
+-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
++LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
+ 
+ # handle IO dependencies
+ USE_LEVELDB ?= 1
+ USE_LMDB ?= 1
+ USE_OPENCV ?= 1
++# This code is taken from https://github.com/sh1r0/caffe-android-lib
++USE_HDF5 ?= 1
+ 
+ ifeq ($(USE_LEVELDB), 1)
+        LIBRARIES += leveldb snappy
+@@ -199,6 +201,10 @@ ifeq ($(USE_OPENCV), 1)
+ 	endif
+ 
+ endif
++# This code is taken from https://github.com/sh1r0/caffe-android-lib
++ifeq ($(USE_HDF5), 1)
++	LIBRARIES += hdf5_hl hdf5
++endif
+ PYTHON_LIBRARIES ?= boost_python python2.7
+ WARNINGS := -Wall -Wno-sign-compare
+ 
+@@ -347,6 +353,10 @@ ifeq ($(ALLOW_LMDB_NOLOCK), 1)
+ 	COMMON_FLAGS += -DALLOW_LMDB_NOLOCK
+ endif
+ endif
++# This code is taken from https://github.com/sh1r0/caffe-android-lib
++ifeq ($(USE_HDF5), 1)
++	COMMON_FLAGS += -DUSE_HDF5
++endif
+ 
+ # CPU-only configuration
+ ifeq ($(CPU_ONLY), 1)
+diff --git a/include/caffe/layers/hdf5_data_layer.hpp b/include/caffe/layers/hdf5_data_layer.hpp
+index 601b36c..83f74bc 100644
+--- a/include/caffe/layers/hdf5_data_layer.hpp
++++ b/include/caffe/layers/hdf5_data_layer.hpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #ifndef CAFFE_HDF5_DATA_LAYER_HPP_
+ #define CAFFE_HDF5_DATA_LAYER_HPP_
+ 
+@@ -62,3 +63,4 @@ class HDF5DataLayer : public Layer<Dtype> {
+ }  // namespace caffe
+ 
+ #endif  // CAFFE_HDF5_DATA_LAYER_HPP_
++#endif
+diff --git a/include/caffe/layers/hdf5_output_layer.hpp b/include/caffe/layers/hdf5_output_layer.hpp
+index 061e279..cfa8d32 100644
+--- a/include/caffe/layers/hdf5_output_layer.hpp
++++ b/include/caffe/layers/hdf5_output_layer.hpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #ifndef CAFFE_HDF5_OUTPUT_LAYER_HPP_
+ #define CAFFE_HDF5_OUTPUT_LAYER_HPP_
+ 
+@@ -60,3 +61,4 @@ class HDF5OutputLayer : public Layer<Dtype> {
+ }  // namespace caffe
+ 
+ #endif  // CAFFE_HDF5_OUTPUT_LAYER_HPP_
++#endif
+diff --git a/include/caffe/util/hdf5.hpp b/include/caffe/util/hdf5.hpp
+index 71549c1..8557d4a 100644
+--- a/include/caffe/util/hdf5.hpp
++++ b/include/caffe/util/hdf5.hpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #ifndef CAFFE_UTIL_HDF5_H_
+ #define CAFFE_UTIL_HDF5_H_
+ 
+@@ -37,3 +38,4 @@ string hdf5_get_name_by_idx(hid_t loc_id, int idx);
+ }  // namespace caffe
+ 
+ #endif   // CAFFE_UTIL_HDF5_H_
++#endif
+diff --git a/src/caffe/layers/hdf5_data_layer.cpp b/src/caffe/layers/hdf5_data_layer.cpp
+index 00716a9..7a23051 100644
+--- a/src/caffe/layers/hdf5_data_layer.cpp
++++ b/src/caffe/layers/hdf5_data_layer.cpp
+@@ -6,6 +6,7 @@ TODO:
+   :: don't forget to update hdf5_daa_layer.cu accordingly
+ - add ability to shuffle filenames if flag is set
+ */
++#ifdef USE_HDF5
+ #include <fstream>  // NOLINT(readability/streams)
+ #include <string>
+ #include <vector>
+@@ -184,3 +185,4 @@ INSTANTIATE_CLASS(HDF5DataLayer);
+ REGISTER_LAYER_CLASS(HDF5Data);
+ 
+ }  // namespace caffe
++#endif
+diff --git a/src/caffe/layers/hdf5_output_layer.cpp b/src/caffe/layers/hdf5_output_layer.cpp
+index f8f1edc..81908c9 100644
+--- a/src/caffe/layers/hdf5_output_layer.cpp
++++ b/src/caffe/layers/hdf5_output_layer.cpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #include <vector>
+ 
+ #include "hdf5.h"
+@@ -72,3 +73,4 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
+ REGISTER_LAYER_CLASS(HDF5Output);
+ 
+ }  // namespace caffe
++#endif
+diff --git a/src/caffe/net.cpp b/src/caffe/net.cpp
+index 353c2f9..a8f1686 100644
+--- a/src/caffe/net.cpp
++++ b/src/caffe/net.cpp
+@@ -5,7 +5,9 @@
+ #include <utility>
+ #include <vector>
+ 
++#ifdef USE_HDF5
+ #include "hdf5.h"
++#endif
+ 
+ #include "caffe/common.hpp"
+ #include "caffe/layer.hpp"
+@@ -769,7 +771,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
+ 
+ template <typename Dtype>
+ void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
+-  if (H5Fis_hdf5(trained_filename.c_str())) {
++  if (trained_filename.size() >= 3 &&
++      trained_filename.compare(trained_filename.size() - 3, 3, ".h5") == 0) {
+     CopyTrainedLayersFromHDF5(trained_filename);
+   } else {
+     CopyTrainedLayersFromBinaryProto(trained_filename);
+@@ -786,6 +789,8 @@ void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
+ 
+ template <typename Dtype>
+ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
++// This code is taken from https://github.com/sh1r0/caffe-android-lib
++#ifdef USE_HDF5
+   hid_t file_hid = H5Fopen(trained_filename.c_str(), H5F_ACC_RDONLY,
+                            H5P_DEFAULT);
+   CHECK_GE(file_hid, 0) << "Couldn't open " << trained_filename;
+@@ -832,6 +837,10 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
+   }
+   H5Gclose(data_hid);
+   H5Fclose(file_hid);
++#else
++  LOG(FATAL) << "CopyTrainedLayersFromHDF5 requires hdf5;"
++             << " compile with USE_HDF5.";
++#endif  // USE_HDF5 
+ }
+ 
+ template <typename Dtype>
+@@ -848,6 +857,8 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
+ 
+ template <typename Dtype>
+ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
++// This code is taken from https://github.com/sh1r0/caffe-android-lib
++#ifdef USE_HDF5
+   hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
+       H5P_DEFAULT);
+   CHECK_GE(file_hid, 0)
+@@ -901,6 +912,10 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
+     H5Gclose(diff_hid);
+   }
+   H5Fclose(file_hid);
++#else
++  LOG(FATAL) << "CopyTrainedLayersFromHDF5 requires hdf5;"
++             << " compile with USE_HDF5.";
++#endif  // USE_HDF5 
+ }
+ 
+ template <typename Dtype>
+diff --git a/src/caffe/solvers/sgd_solver.cpp b/src/caffe/solvers/sgd_solver.cpp
+index ad6abe5..5038651 100644
+--- a/src/caffe/solvers/sgd_solver.cpp
++++ b/src/caffe/solvers/sgd_solver.cpp
+@@ -278,6 +278,8 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
+ template <typename Dtype>
+ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
+     const string& model_filename) {
++// This code is taken from https://github.com/sh1r0/caffe-android-lib
++#ifdef USE_HDF5
+   string snapshot_filename =
+       Solver<Dtype>::SnapshotFilename(".solverstate.h5");
+   LOG(INFO) << "Snapshotting solver state to HDF5 file " << snapshot_filename;
+@@ -299,6 +301,11 @@ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
+   }
+   H5Gclose(history_hid);
+   H5Fclose(file_hid);
++// This code is taken from https://github.com/sh1r0/caffe-android-lib
++#else
++  LOG(FATAL) << "SnapshotSolverStateToHDF5 requires hdf5;"
++             << " compile with USE_HDF5.";
++#endif  // USE_HDF5
+ }
+ 
+ template <typename Dtype>
+@@ -323,6 +330,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
+ 
+ template <typename Dtype>
+ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
++#ifdef USE_HDF5
+   hid_t file_hid = H5Fopen(state_file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   CHECK_GE(file_hid, 0) << "Couldn't open solver state file " << state_file;
+   this->iter_ = hdf5_load_int(file_hid, "iter");
+@@ -344,6 +352,10 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
+   }
+   H5Gclose(history_hid);
+   H5Fclose(file_hid);
++#else
++  LOG(FATAL) << "RestoreSolverStateFromHDF5 requires hdf5;"
++             << " compile with USE_HDF5.";
++#endif  // USE_HDF5
+ }
+ 
+ INSTANTIATE_CLASS(SGDSolver);
+diff --git a/src/caffe/test/test_hdf5_output_layer.cpp b/src/caffe/test/test_hdf5_output_layer.cpp
+index f94dd57..544b454 100644
+--- a/src/caffe/test/test_hdf5_output_layer.cpp
++++ b/src/caffe/test/test_hdf5_output_layer.cpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #include <string>
+ #include <vector>
+ 
+@@ -120,3 +121,4 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
+ }
+ 
+ }  // namespace caffe
++#endif
+diff --git a/src/caffe/test/test_hdf5data_layer.cpp b/src/caffe/test/test_hdf5data_layer.cpp
+index 3977c48..720772c 100644
+--- a/src/caffe/test/test_hdf5data_layer.cpp
++++ b/src/caffe/test/test_hdf5data_layer.cpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #include <string>
+ #include <vector>
+ 
+@@ -163,3 +164,4 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
+ }
+ 
+ }  // namespace caffe
++#endif
+diff --git a/src/caffe/util/hdf5.cpp b/src/caffe/util/hdf5.cpp
+index ed73742..06ab5ff 100644
+--- a/src/caffe/util/hdf5.cpp
++++ b/src/caffe/util/hdf5.cpp
+@@ -1,3 +1,4 @@
++#ifdef USE_HDF5
+ #include "caffe/util/hdf5.hpp"
+ 
+ #include <string>
+@@ -207,3 +208,4 @@ string hdf5_get_name_by_idx(hid_t loc_id, int idx) {
+ }
+ 
+ }  // namespace caffe
++#endif

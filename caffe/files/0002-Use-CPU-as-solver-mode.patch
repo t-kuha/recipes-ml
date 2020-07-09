@@ -1,0 +1,113 @@
+diff --git a/examples/mnist/lenet_adadelta_solver.prototxt b/examples/mnist/lenet_adadelta_solver.prototxt
+index 16176c0..d40cd05 100644
+--- a/examples/mnist/lenet_adadelta_solver.prototxt
++++ b/examples/mnist/lenet_adadelta_solver.prototxt
+@@ -19,6 +19,6 @@ max_iter: 10000
+ snapshot: 5000
+ snapshot_prefix: "examples/mnist/lenet_adadelta"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ type: "AdaDelta"
+ delta: 1e-6
+diff --git a/examples/mnist/lenet_consolidated_solver.prototxt b/examples/mnist/lenet_consolidated_solver.prototxt
+index b81f30f..1139704 100644
+--- a/examples/mnist/lenet_consolidated_solver.prototxt
++++ b/examples/mnist/lenet_consolidated_solver.prototxt
+@@ -28,7 +28,7 @@ snapshot_prefix: "examples/mnist/lenet"
+ # line, or set to a negative integer -- e.g. "random_seed: -1")
+ random_seed: 1701
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ 
+ # We test on both the test and train set using "stages".  The TEST DATA layers
+ # each have a stage, either 'test-on-train-set' or 'test-on-test-set'.
+diff --git a/examples/mnist/lenet_multistep_solver.prototxt b/examples/mnist/lenet_multistep_solver.prototxt
+index 9b22b45..360d442 100644
+--- a/examples/mnist/lenet_multistep_solver.prototxt
++++ b/examples/mnist/lenet_multistep_solver.prototxt
+@@ -26,4 +26,4 @@ max_iter: 10000
+ snapshot: 5000
+ snapshot_prefix: "examples/mnist/lenet_multistep"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+diff --git a/examples/mnist/lenet_solver.prototxt b/examples/mnist/lenet_solver.prototxt
+index 2dfbc83..fada9dd 100644
+--- a/examples/mnist/lenet_solver.prototxt
++++ b/examples/mnist/lenet_solver.prototxt
+@@ -22,4 +22,4 @@ max_iter: 10000
+ snapshot: 5000
+ snapshot_prefix: "examples/mnist/lenet"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+diff --git a/examples/mnist/lenet_solver_adam.prototxt b/examples/mnist/lenet_solver_adam.prototxt
+index 4b5336b..cb2dd8e 100644
+--- a/examples/mnist/lenet_solver_adam.prototxt
++++ b/examples/mnist/lenet_solver_adam.prototxt
+@@ -23,4 +23,4 @@ snapshot: 5000
+ snapshot_prefix: "examples/mnist/lenet"
+ # solver mode: CPU or GPU
+ type: "Adam"
+-solver_mode: GPU
++solver_mode: CPU
+diff --git a/examples/mnist/lenet_solver_rmsprop.prototxt b/examples/mnist/lenet_solver_rmsprop.prototxt
+index 924b72d..8a783bf 100644
+--- a/examples/mnist/lenet_solver_rmsprop.prototxt
++++ b/examples/mnist/lenet_solver_rmsprop.prototxt
+@@ -22,6 +22,6 @@ max_iter: 10000
+ snapshot: 5000
+ snapshot_prefix: "examples/mnist/lenet_rmsprop"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ type: "RMSProp"
+ rms_decay: 0.98
+diff --git a/examples/mnist/mnist_autoencoder_solver.prototxt b/examples/mnist/mnist_autoencoder_solver.prototxt
+index 6e35cb6..fb87848 100644
+--- a/examples/mnist/mnist_autoencoder_solver.prototxt
++++ b/examples/mnist/mnist_autoencoder_solver.prototxt
+@@ -16,4 +16,4 @@ snapshot: 10000
+ snapshot_prefix: "examples/mnist/mnist_autoencoder"
+ momentum: 0.9
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+diff --git a/examples/mnist/mnist_autoencoder_solver_adadelta.prototxt b/examples/mnist/mnist_autoencoder_solver_adadelta.prototxt
+index 26c4084..03d561e 100644
+--- a/examples/mnist/mnist_autoencoder_solver_adadelta.prototxt
++++ b/examples/mnist/mnist_autoencoder_solver_adadelta.prototxt
+@@ -15,5 +15,5 @@ weight_decay: 0.0005
+ snapshot: 10000
+ snapshot_prefix: "examples/mnist/mnist_autoencoder_adadelta_train"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ type: "AdaDelta"
+diff --git a/examples/mnist/mnist_autoencoder_solver_adagrad.prototxt b/examples/mnist/mnist_autoencoder_solver_adagrad.prototxt
+index 065cdb2..fd05c1f 100644
+--- a/examples/mnist/mnist_autoencoder_solver_adagrad.prototxt
++++ b/examples/mnist/mnist_autoencoder_solver_adagrad.prototxt
+@@ -13,5 +13,5 @@ weight_decay: 0.0005
+ snapshot: 10000
+ snapshot_prefix: "examples/mnist/mnist_autoencoder_adagrad_train"
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ type: "AdaGrad"
+diff --git a/examples/mnist/mnist_autoencoder_solver_nesterov.prototxt b/examples/mnist/mnist_autoencoder_solver_nesterov.prototxt
+index c95e3fe..b017a30 100644
+--- a/examples/mnist/mnist_autoencoder_solver_nesterov.prototxt
++++ b/examples/mnist/mnist_autoencoder_solver_nesterov.prototxt
+@@ -16,5 +16,5 @@ snapshot: 10000
+ snapshot_prefix: "examples/mnist/mnist_autoencoder_nesterov_train"
+ momentum: 0.95
+ # solver mode: CPU or GPU
+-solver_mode: GPU
++solver_mode: CPU
+ type: "Nesterov"
+-- 
+2.7.4
+
