@@ -41,8 +41,6 @@ do_unpack_append(){
 
 
 do_compile () {
-	echo "----------------------------------"
-	echo ${STAGING_BINDIR_NATIVE}
     oe_runmake distribute
 }
 
