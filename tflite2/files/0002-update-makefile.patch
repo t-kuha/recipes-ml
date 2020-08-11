@@ -1,8 +1,17 @@
+From e56dff512d62fe7117a08fc33478197fcfb308e3 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Tue, 11 Aug 2020 02:42:25 +0000
+Subject: [PATCH] update makefile
+
+---
+ tensorflow/lite/tools/make/Makefile | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
 diff --git a/tensorflow/lite/tools/make/Makefile b/tensorflow/lite/tools/make/Makefile
-index b78fb14b785..f0c5950cf0e 100644
+index f8b67fbbe7d..7d794569f38 100644
 --- a/tensorflow/lite/tools/make/Makefile
 +++ b/tensorflow/lite/tools/make/Makefile
-@@ -39,26 +39,23 @@ INCLUDES := \
+@@ -40,11 +40,9 @@ INCLUDES := \
  -I$(MAKEFILE_DIR)/downloads/neon_2_sse \
  -I$(MAKEFILE_DIR)/downloads/farmhash/src \
  -I$(MAKEFILE_DIR)/downloads/flatbuffers/include \
@@ -15,26 +24,26 @@ index b78fb14b785..f0c5950cf0e 100644
  
  # These are the default libraries needed, but they can be added to or
  # overridden by the platform-specific settings in target makefiles.
- LIBS := \
+@@ -52,7 +50,6 @@ LIBS := \
  -lstdc++ \
  -lpthread \
---lm \
---lz
-+-lm
+ -lm \
+--lz \
+ -ldl
  
  # There are no rules for compiling objects for the host system (since we don't
- # generate things like the protobuf compiler that require that), so all of
+@@ -60,7 +57,7 @@ LIBS := \
  # these settings are for the target compiler.
- CFLAGS := -O3 -DNDEBUG -fPIC
+ CFLAGS := -O3 -DNDEBUG -fPIC $(EXTRA_CFLAGS)
  CXXFLAGS := $(CFLAGS) --std=c++11 $(EXTRA_CXXFLAGS)
 -LDOPTS := -L/usr/local/lib
-+LDOPTS := 
++LDOPTS :=
  ARFLAGS := -r
  TARGET_TOOLCHAIN_PREFIX :=
  CC_PREFIX :=
-@@ -241,9 +238,9 @@ BENCHMARK_BINARY := $(BINDIR)$(BENCHMARK_BINARY_NAME)
- BENCHMARK_PERF_OPTIONS_BINARY := $(BINDIR)$(BENCHMARK_PERF_OPTIONS_BINARY_NAME)
+@@ -283,9 +280,9 @@ BENCHMARK_PERF_OPTIONS_BINARY := $(BINDIR)$(BENCHMARK_PERF_OPTIONS_BINARY_NAME)
  MINIMAL_BINARY := $(BINDIR)minimal
+ LABEL_IMAGE_BINARY := $(BINDIR)label_image
  
 -CXX := $(CC_PREFIX)${TARGET_TOOLCHAIN_PREFIX}g++
 -CC := $(CC_PREFIX)${TARGET_TOOLCHAIN_PREFIX}gcc
@@ -45,3 +54,6 @@ index b78fb14b785..f0c5950cf0e 100644
  
  MINIMAL_OBJS := $(addprefix $(OBJDIR), \
  $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(MINIMAL_SRCS))))
+-- 
+2.17.1
+
