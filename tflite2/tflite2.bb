@@ -14,7 +14,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=64a34301f8e355f57ec992c2af3e5157"
 
-DEPENDS = "curl-native unzip-native "
+DEPENDS = "unzip-native "
 
 SRC_URI = "\
     git://github.com/tensorflow/tensorflow.git;protocol=https;tag=v${PV};nobranch=1 \
