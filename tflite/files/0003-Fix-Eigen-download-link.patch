@@ -1,0 +1,25 @@
+From 765a2b04268d030d247a45d600686f3bac5e5d38 Mon Sep 17 00:00:00 2001
+From: Chris Roed <chris.roed@omcare.com>
+Date: Tue, 1 Sep 2020 11:36:49 -0500
+Subject: [PATCH 3/3] use the google repo for eigen
+
+---
+ tensorflow/lite/tools/make/download_dependencies.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tensorflow/lite/tools/make/download_dependencies.sh b/tensorflow/lite/tools/make/download_dependencies.sh
+index ef4a7777e6..678e35d987 100755
+--- a/tensorflow/lite/tools/make/download_dependencies.sh
++++ b/tensorflow/lite/tools/make/download_dependencies.sh
+@@ -29,7 +29,7 @@ if [ ! -f $BZL_FILE_PATH ]; then
+   exit 1;
+ fi
+ 
+-EIGEN_URL="$(grep -o 'http.*bitbucket.org/eigen/eigen/get/.*tar\.gz' "${BZL_FILE_PATH}" | grep -v mirror.tensorflow | head -n1)"
++EIGEN_URL="$(grep -o 'http.*bitbucket.org/eigen/eigen/get/.*tar\.gz' "${BZL_FILE_PATH}" | grep mirror.tensorflow | head -n1)"
+ GEMMLOWP_URL="$(grep -o 'https://storage.googleapis.com/mirror.tensorflow.org/github.com/google/gemmlowp/.*zip' "${BZL_FILE_PATH}" | head -n1)"
+ GOOGLETEST_URL="https://github.com/google/googletest/archive/release-1.8.0.tar.gz"
+ ABSL_URL="$(grep -o 'https://github.com/abseil/abseil-cpp/.*tar.gz' "${BZL_FILE_PATH}" | head -n1)"
+-- 
+2.20.1
+
