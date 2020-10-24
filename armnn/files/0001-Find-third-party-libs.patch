@@ -1,0 +1,33 @@
+From 2c26980c2b3a00c3ab07e2d4dba5d6df6d486ed9 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Tue, 20 Oct 2020 03:43:30 +0000
+Subject: [PATCH] Fix for Yocto
+
+---
+ cmake/GlobalConfig.cmake      | 4 ++--
+ cmake/modules/FindBoost.cmake | 5 +++--
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/cmake/GlobalConfig.cmake b/cmake/GlobalConfig.cmake
+index b093e5d..3cd75a5 100644
+--- a/cmake/GlobalConfig.cmake
++++ b/cmake/GlobalConfig.cmake
+@@ -140,13 +140,13 @@ endif()
+ 
+ if (NOT BUILD_PIPE_ONLY)
+   # cxxopts (Alternative to boost::program_options)
+-  find_path(CXXOPTS_INCLUDE cxxopts/cxxopts.hpp PATHS third-party)
++  find_path(CXXOPTS_INCLUDE cxxopts/cxxopts.hpp PATHS third-party NO_CMAKE_FIND_ROOT_PATH)
+   include_directories(SYSTEM "${CXXOPTS_INCLUDE}")
+ endif()
+ 
+ if (NOT BUILD_PIPE_ONLY)
+   # ghc (Alternative to boost::filesystem)
+-  find_path(GHC_INCLUDE ghc/filesystem.hpp PATHS third-party)
++  find_path(GHC_INCLUDE ghc/filesystem.hpp PATHS third-party NO_CMAKE_FIND_ROOT_PATH)
+   include_directories(SYSTEM "${GHC_INCLUDE}")
+ endif()
+
+-- 
+2.7.4
+
