@@ -22,12 +22,13 @@ SRC_URI = " \
     file://0001-Find-third-party-libs.patch \
     "
 
-DEPENDS = "boost"
+DEPENDS += "boost arm-computelibrary"
 
 inherit cmake 
 
 # https://github.com/STMicroelectronics/meta-st-stm32mpu-ai/blob/master/recipes-frameworks/armnn/armnn_20.05.bb
 EXTRA_OECMAKE = "\
     -DCMAKE_BUILD_TYPE=Release \
+    -DARMCOMPUTENEON=ON \
     -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES=${STAGING_INCDIR} \
 "
