@@ -20,7 +20,6 @@ SRC_URI = " \
     git://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
     file://TryRunResults.cmake \
 "
-# file://0001-Fix-sleef.patch
 
 DEPENDS += "openblas protobuf gflags glog "
 DEPENDS += " \
@@ -53,22 +52,14 @@ EXTRA_OECMAKE = "\
     -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES=${STAGING_INCDIR} \
     -DCMAKE_CROSSCOMPILING=ON \
 "
-# -G'Unix Makefiles'
-# -DBLAS=OpenBLAS 
 
 do_configure_prepend(){
     cd ${S}
     git submodule sync
     git submodule update --init --recursive
-    # cd ${WORKDIR}
 
     # Use sed - we cannot "git patch" before fetching submodules
     find . -type f -name "Configure.cmake" | xargs sed -i -e s/"set(ORG_CMAKE_C_FLAGS\ CMAKE_C_FLAGS)"/"set(ORG_CMAKE_C_FLAGS\ \$\{CMAKE_C_FLAGS\})"/g
     find . -type f -name "CMakeLists.txt" | xargs sed -i -e s/"set(CMAKE_C_FLAGS\ ORG_CMAKE_C_FLAGS)"/"set(CMAKE_C_FLAGS \$\{ORG_CMAKE_C_FLAGS\})"/g
-
     find . -type f -name "CMakeLists.txt" | xargs sed -i -e s/"string(CONCAT\ CMAKE_C_FLAGS\ \${SLEEF_C_FLAGS})"/"string(CONCAT\ CMAKE_C_FLAGS\ \${CMAKE_C_FLAGS}\ \"\ \" \${SLEEF_C_FLAGS})"/g
-    # cd third_party/sleef
-    # git apply ${WORKDIR}/0001-Fix-sleef.patch
 }
-
-# sed -i -e s/"string(CONCAT CMAKE_C_FLAGS ${SLEEF_C_FLAGS})"/"list(APPEND CMAKE_C_FLAGS ${SLEEF_C_FLAGS})"/g src/common/CMakeLists.txt
