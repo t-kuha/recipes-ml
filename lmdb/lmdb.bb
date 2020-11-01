@@ -1,3 +1,4 @@
+# 
 # LMDB
 # 
 
@@ -39,23 +40,4 @@ do_install () {
     oe_runmake install 'DESTDIR=${D}'
 }
 
-PACKAGES = " \
-    ${PN}     \
-    ${PN}-dev \
-    ${PN}-dbg \
-"
-
-FILES_${PN} += " \
-    ${libdir}/* \
-"
-
-FILES_${PN}-dev += " \
-    ${libdir}/* \
-    ${includedir}/* \
-"
-
-FILES_${PN}-dbg += " \
-    ${libdir}/* \
-    ${includedir}/* \
-    ${libdir}/.debug/* \
-"
+INSANE_SKIP_${PN}-dev += "dev-elf"
