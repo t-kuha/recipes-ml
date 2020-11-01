@@ -1,5 +1,7 @@
 # 
+# snappy
 # 
+
 SUMMARY = "Snappy"
 DESCRIPTION = "A fast compressor/decompressor"
 
@@ -14,30 +16,10 @@ PR = "r0"
 
 SRC_URI = "git://github.com/google/snappy.git;protocol=https;tag=${PV}"
 
-inherit cmake pkgconfig
+inherit cmake
 
 EXTRA_OECMAKE = "\
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=ON \
     -DSNAPPY_BUILD_TESTS=OFF \
-"
-PACKAGES = " \
-    ${PN}     \
-    ${PN}-dev \
-    ${PN}-dbg \
-"
-
-FILES_${PN} += " \
-    ${libdir}/* \
-"
-
-FILES_${PN}-dev += " \
-    ${libdir}/* \
-    ${includedir}/* \
-"
-
-FILES_${PN}-dbg += " \
-    ${libdir}/* \
-    ${includedir}/* \
-    ${libdir}/.debug/* \
 "
