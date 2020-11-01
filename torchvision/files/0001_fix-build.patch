@@ -26,6 +26,17 @@ index fa50f155..34c02cd1 100644
  
  include(GNUInstallDirs)
  include(CMakePackageConfigHelpers)
+diff --git a/torchvision/csrc/cpu/vision_cpu.h b/torchvision/csrc/cpu/vision_cpu.h
+index 6b68b356..54946cf4 100644
+--- a/torchvision/csrc/cpu/vision_cpu.h
++++ b/torchvision/csrc/cpu/vision_cpu.h
+@@ -1,5 +1,5 @@
+ #pragma once
+-#include <torch/extension.h>
++#include <torch/all.h>
+
+ std::tuple<at::Tensor, at::Tensor> ROIPool_forward_cpu(
+     const at::Tensor& input,
 diff --git a/torchvision/csrc/empty_tensor_op.h b/torchvision/csrc/empty_tensor_op.h
 index 64a1c44f..99448109 100644
 --- a/torchvision/csrc/empty_tensor_op.h
