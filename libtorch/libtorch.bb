@@ -18,6 +18,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=acf4d595f99e159bf31797aa872aef57"
 
 SRC_URI = " \
     git://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
+    file://0002_fix-AArch64-build.patch \
     file://TryRunResults.cmake \
 "
 
@@ -45,6 +46,7 @@ EXTRA_OECMAKE = "\
     -DUSE_GLOO=OFF \
     -DUSE_DISTRIBUTED=OFF \
     -DUSE_TENSORPIPE=OFF \
+    -DUSE_XNNPACK=ON \
     -DBUILD_CUSTOM_PROTOBUF=OFF \
     -DPYTHON_EXECUTABLE=python3 \
     -DNATIVE_BUILD_DIR=${STAGING_DIR_NATIVE}/usr \
@@ -69,7 +71,7 @@ do_configure_prepend(){
 }
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = '1'
-INSANE_SKIP_${PN}-dev += "ldflags"
+INSANE_SKIP_${PN}-dev += "ldflags dev-elf"
 
 FILES_${PN} += " \
     ${includedir}/* \
