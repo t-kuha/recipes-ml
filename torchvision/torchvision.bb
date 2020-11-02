@@ -21,10 +21,7 @@ SRC_URI = " \
     file://0001_fix-build.patch \
 "
 
-DEPENDS += "libtorch protobuf jpeg libpng "
-DEPENDS += " \
-    protobuf-native \
-"
+DEPENDS += "libtorch jpeg libpng "
 
 inherit cmake 
 
