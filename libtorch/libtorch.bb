@@ -58,7 +58,7 @@ EXTRA_OECMAKE = "\
 do_configure_prepend(){
     cd ${S}
     git submodule sync
-    git submodule update --init --recursive
+    git submodule update --init --recursive --jobs=$(nproc)
 
     # Use sed - we cannot "git patch" before fetching submodules
     find . -type f -name "Configure.cmake" | xargs sed -i -e s/"set(ORG_CMAKE_C_FLAGS\ CMAKE_C_FLAGS)"/"set(ORG_CMAKE_C_FLAGS\ \$\{CMAKE_C_FLAGS\})"/g
