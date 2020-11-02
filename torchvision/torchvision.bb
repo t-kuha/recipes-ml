@@ -6,7 +6,7 @@ SUMMARY = "torchvision"
 DESCRIPTION = "Datasets, Transforms and Models specific to Computer Vision"
 
 # Version to use
-PV = "0.7.0"
+PV = "0.8.1"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
@@ -21,7 +21,7 @@ SRC_URI = " \
     file://0001_fix-build.patch \
 "
 
-DEPENDS += "libtorch protobuf "
+DEPENDS += "libtorch protobuf jpeg libpng "
 DEPENDS += " \
     protobuf-native \
 "

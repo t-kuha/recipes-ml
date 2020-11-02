@@ -1,42 +1,54 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index fa50f155..34c02cd1 100644
+index cd2a4d49..898b96d0 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -10,7 +10,6 @@ if(WITH_CUDA)
-   add_definitions(-D__CUDA_NO_HALF_OPERATORS__)
+@@ -12,8 +12,6 @@ if(WITH_CUDA)
+   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
  endif()
  
 -find_package(Python3 COMPONENTS Development)
+-
  find_package(Torch REQUIRED)
+ find_package(PNG REQUIRED)
+ find_package(JPEG REQUIRED)
+@@ -60,10 +58,13 @@ if(MSVC)
+ endif()
  
- file(GLOB HEADERS torchvision/csrc/*.h)
-@@ -22,12 +21,14 @@ file(GLOB MODELS_HEADERS torchvision/csrc/models/*.h)
- file(GLOB MODELS_SOURCES torchvision/csrc/models/*.h torchvision/csrc/models/*.cpp)
- 
- add_library(${PROJECT_NAME} SHARED ${MODELS_SOURCES} ${OPERATOR_SOURCES})
--target_link_libraries(${PROJECT_NAME} PRIVATE ${TORCH_LIBRARIES} Python3::Python)
+ add_library(${PROJECT_NAME} SHARED ${MODELS_SOURCES} ${OPERATOR_SOURCES} ${IMAGE_SOURCES})
+-target_link_libraries(${PROJECT_NAME} PRIVATE ${TORCH_LIBRARIES} ${PNG_LIBRARY} ${JPEG_LIBRARIES} Python3::Python)
  set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_NAME TorchVision)
  
- target_include_directories(${PROJECT_NAME} INTERFACE
-   $<BUILD_INTERFACE:${HEADERS}>
-   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+ include_directories(torchvision/csrc ${JPEG_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
 +target_include_directories(${PROJECT_NAME} PRIVATE
 +  ${TORCH_INCLUDE_DIRS}
 +)
- 
++
  include(GNUInstallDirs)
  include(CMakePackageConfigHelpers)
+ 
+diff --git a/torchvision/csrc/cpu/image/image.cpp b/torchvision/csrc/cpu/image/image.cpp
+index d9234ace..d053ecf0 100644
+--- a/torchvision/csrc/cpu/image/image.cpp
++++ b/torchvision/csrc/cpu/image/image.cpp
+@@ -1,7 +1,6 @@
+ 
+ #include "image.h"
+ #include <ATen/ATen.h>
+-#include <Python.h>
+ 
+ // If we are in a Windows environment, we need to define
+ // initialization functions for the _custom_ops extension
 diff --git a/torchvision/csrc/cpu/vision_cpu.h b/torchvision/csrc/cpu/vision_cpu.h
-index 6b68b356..54946cf4 100644
+index 331043c5..9ccbc87e 100644
 --- a/torchvision/csrc/cpu/vision_cpu.h
 +++ b/torchvision/csrc/cpu/vision_cpu.h
 @@ -1,5 +1,5 @@
  #pragma once
 -#include <torch/extension.h>
 +#include <torch/all.h>
-
- std::tuple<at::Tensor, at::Tensor> ROIPool_forward_cpu(
-     const at::Tensor& input,
+ 
+ #ifdef _WIN32
+ #if defined(torchvision_EXPORTS)
 diff --git a/torchvision/csrc/empty_tensor_op.h b/torchvision/csrc/empty_tensor_op.h
 index 64a1c44f..99448109 100644
 --- a/torchvision/csrc/empty_tensor_op.h
@@ -51,7 +63,7 @@ index 64a1c44f..99448109 100644
  class NewEmptyTensorOp : public torch::autograd::Function<NewEmptyTensorOp> {
   public:
 diff --git a/torchvision/csrc/vision.cpp b/torchvision/csrc/vision.cpp
-index aa2ec26b..4f5fee1e 100644
+index 81daa0fd..403f8888 100644
 --- a/torchvision/csrc/vision.cpp
 +++ b/torchvision/csrc/vision.cpp
 @@ -1,4 +1,3 @@
