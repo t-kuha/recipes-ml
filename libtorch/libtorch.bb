@@ -6,7 +6,7 @@ SUMMARY = "libtorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "1.6.0"
+PV = "1.7.0"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
@@ -18,15 +18,15 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=acf4d595f99e159bf31797aa872aef57"
 
 SRC_URI = " \
     git://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
-    file://0002_fix-AArch64-build.patch \
     file://TryRunResults.cmake \
 "
 
 DEPENDS += "protobuf gflags glog "
+# For Yocto supporting native Python v3.6 or up, add the following components:
+# python3-native python3-pyyaml-native
+#
 DEPENDS += " \
     protobuf-native \
-    python3-native \
-    python3-pyyaml-native \
     sleef-native"
 
 inherit cmake 
@@ -48,7 +48,7 @@ EXTRA_OECMAKE = "\
     -DUSE_TENSORPIPE=OFF \
     -DUSE_XNNPACK=ON \
     -DBUILD_CUSTOM_PROTOBUF=OFF \
-    -DPYTHON_EXECUTABLE=python3 \
+    -DPYTHON_EXECUTABLE=/usr/bin/python3 \
     -DNATIVE_BUILD_DIR=${STAGING_DIR_NATIVE}/usr \
     -DCAFFE2_CUSTOM_PROTOC_EXECUTABLE=${STAGING_DIR_NATIVE}/usr/bin/protoc \
     -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES=${STAGING_INCDIR} \
