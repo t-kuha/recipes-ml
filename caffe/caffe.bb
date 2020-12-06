@@ -1,3 +1,4 @@
+#
 # Caffe
 # 
 
@@ -5,7 +6,7 @@ SUMMARY = "Caffe"
 DESCRIPTION = "Caffe: a fast open framework for deep learning."
 
 LICENSE = "BSD-2-Clause"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/LICENSE;md5=0835ade698e0bcf8506ecda2f7b4f302"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=91d560803ea3d191c457b12834553991"
 
 # Caffe version to use
 PV = "1.0"
@@ -14,13 +15,13 @@ PR = "r0"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 SRC_URI = "\
-	git://github.com/BVLC/caffe.git;protocol=https;tag=${PV} \
+    git://github.com/BVLC/caffe.git;protocol=https;tag=${PV} \
     file://0001-Update-Makefile.config.patch  \
     file://0002-Use-CPU-as-solver-mode.patch \
     file://0003-Fix-test-when-CPU-only-mode.patch \
     file://0004-Remove-Python-from-build-target.patch \
     file://0005_disable-hdf5.patch \
-	"
+"
 
 S = "${WORKDIR}/git/"
 
@@ -39,13 +40,16 @@ do_unpack_append(){
     shutil.copy(os.path.join(s, 'Makefile.config.example'), os.path.join(s, 'Makefile.config'))
 }
 
-
 do_compile () {
     oe_runmake distribute
 }
 
 do_install () {
     rm -rf ${D}
-    mkdir -p ${D}
-    cp -R ${S}/distribute/* ${D}
+    mkdir -p ${D}/usr
+    cp -R ${S}/distribute/* ${D}/usr
 }
+
+FILES_${PN} += " \
+    ${prefix}/proto/* \
+"
