@@ -1,3 +1,4 @@
+#
 # OpenBLAS
 # 
 SUMMARY = "OpenBLAS"
@@ -24,25 +25,4 @@ EXTRA_OECMAKE = "\
     -DCMAKE_BUILD_TYPE=Release \
     -DNOFORTRAN=1 \
     -DBUILD_SHARED_LIBS=1 \
-"
-
-PACKAGES = " \
-    ${PN}     \
-    ${PN}-dev \
-    ${PN}-dbg \
-"
-
-FILES_${PN} += " \
-    ${libdir}/* \
-"
-
-FILES_${PN}-dev += " \
-    ${libdir}/* \
-    ${includedir}/* \
-"
-
-FILES_${PN}-dbg += " \
-    ${libdir}/* \
-    ${includedir}/* \
-    ${libdir}/.debug/* \
 "
