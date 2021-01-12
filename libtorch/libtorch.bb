@@ -27,7 +27,9 @@ DEPENDS += "protobuf gflags glog "
 #
 DEPENDS += " \
     protobuf-native \
-    sleef-native"
+    sleef-native \
+    coreutils-native \
+"
 
 inherit cmake 
 
