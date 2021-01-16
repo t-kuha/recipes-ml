@@ -5,7 +5,7 @@ SUMMARY = "TensorFLow Lite"
 DESCRIPTION = "TensorFlow Lite is TensorFlow's lightweight solution for mobile and embedded devices."
 
 # TFLite version to use
-PV = "1.15.4"
+PV = "1.15.5"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
@@ -21,9 +21,7 @@ SRC_URI = "\
     git://github.com/tensorflow/tensorflow.git;protocol=https;tag=v${PV};nobranch=1 \
     file://0001-Update-download_dependencies.sh.patch \
     file://0002-Update-Makefile.patch \
-    file://0003-Fix-Eigen-download-link.patch \
     "
-
 
 do_compile(){
     ${S}tensorflow/lite/tools/make/download_dependencies.sh
