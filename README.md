@@ -12,7 +12,7 @@ __libtorch__: PyTorch C++ API (v1.7.0)
 
 __torchvision__: Torch Vision (v0.8.1)
 
-__tflite__: TensorFlow Lite (TF v1.15.4)
+__tflite__: TensorFlow Lite (TF v1.15.5)
 
 __tflite2__: TensorFlow Lite (TF v2.3.0)
 
