@@ -26,3 +26,7 @@ EXTRA_OECMAKE = "\
     -DNOFORTRAN=1 \
     -DBUILD_SHARED_LIBS=1 \
 "
+
+FILES_${PN} += " \
+    ${datadir}/cmake/* \
+"

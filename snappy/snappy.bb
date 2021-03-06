@@ -23,3 +23,7 @@ EXTRA_OECMAKE = "\
     -DBUILD_SHARED_LIBS=ON \
     -DSNAPPY_BUILD_TESTS=OFF \
 "
+
+FILES_${PN} += " \
+    ${libdir}/cmake/* \
+"
