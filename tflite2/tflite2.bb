@@ -5,7 +5,7 @@ SUMMARY = "TensorFLow Lite"
 DESCRIPTION = "TensorFlow Lite is TensorFlow's lightweight solution for mobile and embedded devices."
 
 # TFLite version to use
-PV = "2.3.0"
+PV = "2.4.1"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
