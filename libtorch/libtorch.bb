@@ -14,7 +14,7 @@ S = "${WORKDIR}/git/"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 LICENSE = "MIT"
 
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=acf4d595f99e159bf31797aa872aef57"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=91a5dfdaccf53b27488cb3a639e986d5"
 
 SRC_URI = " \
     git://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
