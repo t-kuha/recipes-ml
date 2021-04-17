@@ -6,12 +6,11 @@ SUMMARY = "ARM NN"
 DESCRIPTION = "Arm NN ML Software."
 
 # Version to use
-PV = "20.08"
+PV = "21.02"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=3e14a924c16f7d828b8335a59da64074"
@@ -19,7 +18,6 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=3e14a924c16f7d828b8335a59da64074"
 # The patch is based on https://review.mlplatform.org/c/ml/armnn/+/3906
 SRC_URI = " \
     git://github.com/ARM-software/armnn;protocol=https;nobranch=1;tag=v${PV} \
-    file://0001-Find-third-party-libs.patch \
     "
 
 DEPENDS += "boost arm-computelibrary"
