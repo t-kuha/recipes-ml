@@ -1,0 +1,25 @@
+From 60260f04df043a47c381a396fd3adddfed43dbf6 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 17 Apr 2021 07:11:36 +0000
+Subject: [PATCH] Fix compiler option confliction
+
+---
+ SConstruct | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SConstruct b/SConstruct
+index 274326f67..970e9f63e 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -206,7 +206,7 @@ if 'v7a' in env['estate'] and env['estate'] == '64':
+ # Add architecture specific flags
+ prefix = ""
+ if 'v7a' in env['arch']:
+-    env.Append(CXXFLAGS = ['-march=armv7-a', '-mthumb', '-mfpu=neon'])
++    env.Append(CXXFLAGS = ['-mthumb', '-mfpu=neon'])
+     if env['os'] == 'android' or env['os'] == 'tizen':
+         env.Append(CXXFLAGS = ['-mfloat-abi=softfp'])
+     else:
+-- 
+2.17.1
+

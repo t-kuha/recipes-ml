@@ -1,3 +1,4 @@
+# 
 # ARM Computer Vision and Machine Learning library
 # 
 
@@ -7,28 +8,50 @@ DESCRIPTION = "The ARM Computer Vision and Machine Learning library is a set of 
 COMPATIBLE_MACHINE = "armv7a|aarch64"
 
 # Version to use
-PV = "20.08"
+PV = "21.02"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=a700d9de43fc22e998001a63c3feb1d2"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=9598101cf48c5f479cfda9f3fc6fc566"
 
 # for nproc command
 DEPENDS = "coreutils-native " 
 
 SRC_URI = "\
     git://github.com/ARM-software/ComputeLibrary.git;protocol=https;tag=v${PV} \
-    "
+	file://0001-Fix-compiler-option-confliction.patch \
+"
 
 inherit scons
 
-EXTRA_OESCONS += " CONFIG_ENVIRONMENT_IMPORT=True "
+EXTRA_OESCONS_armv7a += "\
+	arch=armv7a \
+	extra_cxx_flags="-fPIC -Wno-unused-but-set-variable -Wno-ignored-qualifiers -Wno-noexcept ${TOOLCHAIN_OPTIONS}" \
+	benchmark_tests=1 \
+	validation_tests=0 \
+	neon=1 \
+	openmp=1 \
+	opencl=0 \
+	set_soname=1 \
+	toolchain_prefix=' ' \
+	install_dir=_install \
+"
 
-EXTRA_OESCONS_armv7a = "arch=armv7a extra_cxx_flags="-fPIC -Wno-unused-but-set-variable -Wno-ignored-qualifiers -Wno-noexcept ${TOOLCHAIN_OPTIONS}" benchmark_tests=1 validation_tests=0 neon=1 openmp=1 opencl=0 set_soname=1 toolchain_prefix=' ' install_dir=_install"
-EXTRA_OESCONS = "arch=arm64-v8a extra_cxx_flags="-fPIC -Wno-unused-but-set-variable -Wno-ignored-qualifiers -Wno-noexcept ${TOOLCHAIN_OPTIONS}" benchmark_tests=1 validation_tests=0 neon=1 openmp=1 opencl=0 set_soname=1 toolchain_prefix=' ' install_dir=_install"
+EXTRA_OESCONS_aarch64 += "\
+	arch=arm64-v8a \
+    extra_cxx_flags="-fPIC -Wno-unused-but-set-variable -Wno-ignored-qualifiers -Wno-noexcept ${TOOLCHAIN_OPTIONS}" \
+    benchmark_tests=1 \
+    validation_tests=0 \
+    neon=1 \
+    openmp=1 \
+    opencl=0 \
+    set_soname=1 \
+    toolchain_prefix=' ' \
+    install_dir=_install \
+"
 
 do_install(){
     mkdir -p ${D}${bindir}
@@ -36,15 +59,8 @@ do_install(){
     mkdir -p ${D}${includedir}
 
     cp -R ${S}build/_install/bin/* ${D}${bindir}
-    #cp -R ${S}build/_install/lib/* ${D}${libdir}
     cp -R ${S}build/*.so* ${D}${libdir}
     cp -R ${S}build/_install/include/* ${D}${includedir}
 }
 
 INSANE_SKIP_${PN} = "ldflags rdepends "
-#INSANE_SKIP_${PN}-dev = "ldflags"
-
-FILES_${PN} += " \
-    ${bindir}/* \
-    ${libdir}/* \
-"
