@@ -6,7 +6,7 @@ SUMMARY = "libtorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "1.7.0"
+PV = "1.8.1"
 PR = "r0"
 
 S = "${WORKDIR}/git/"
@@ -70,6 +70,7 @@ do_configure_prepend(){
     cd ${S}/third_party/cpuinfo
     sed -i -e s/"|aarch64)"/"|aarch64|arm)"/g CMakeLists.txt
     sed -i -e s/"\^armv\[5-8\]"/"\^armv\[5-8\]|arm"/g CMakeLists.txt
+	sed -i -e s/"|arm64)"/"|arm64|arm)"/g CMakeLists.txt
 }
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = '1'
