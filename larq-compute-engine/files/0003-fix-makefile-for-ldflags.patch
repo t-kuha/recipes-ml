@@ -1,0 +1,64 @@
+From b0e9b00e61a96c8cb3f9f9a5ba44a38a38f5b620 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Tue, 20 Apr 2021 13:13:46 +0000
+Subject: [PATCH] Fix makefile for ldflags
+
+---
+ larq_compute_engine/tflite/build_make/Makefile | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/larq_compute_engine/tflite/build_make/Makefile b/larq_compute_engine/tflite/build_make/Makefile
+index 4fd583d..ff03f28 100644
+--- a/larq_compute_engine/tflite/build_make/Makefile
++++ b/larq_compute_engine/tflite/build_make/Makefile
+@@ -54,16 +54,12 @@ INCLUDES := \
+ -I$(TF_MAKEFILE_DIR)/downloads/farmhash/src \
+ -I$(TF_MAKEFILE_DIR)/downloads/flatbuffers/include \
+ -I$(TF_MAKEFILE_DIR)/downloads/fp16/include
+-# This is at the end so any globally-installed frameworks like protobuf don't
+-# override local versions in the source tree.
+-INCLUDES += -I/usr/local/include
+ 
+ # These are the default libraries needed, but they can be added to or
+ # overridden by the platform-specific settings in target makefiles.
+ LIBS := \
+ -lstdc++ \
+ -lpthread \
+--lm \
+ -lz \
+ -ldl
+ 
+@@ -72,7 +68,7 @@ LIBS := \
+ # these settings are for the target compiler.
+ CFLAGS := -O3 -DNDEBUG -fPIC $(EXTRA_CFLAGS)
+ CXXFLAGS := $(CFLAGS) --std=c++11 $(EXTRA_CXXFLAGS)
+-LDOPTS := -L/usr/local/lib
++LDOPTS +=
+ ARFLAGS := -r
+ TARGET_TOOLCHAIN_PREFIX :=
+ CC_PREFIX :=
+@@ -125,6 +121,8 @@ LCE_BENCHMARK_SRCS := \
+ # keep this main makefile focused on the sources and dependencies.
+ include $(wildcard $(TF_MAKEFILE_DIR)/targets/*_makefile.inc)
+ 
++LDFLAGS += -Wl,-O1 -Wl,--hash-style=gnu -Wl,--as-needed -fstack-protector-strong -Wl,-z,relro,-z,now
++
+ # Where compiled objects are stored.
+ TARGET_OUT_DIR ?= $(TARGET)_$(TARGET_ARCH)
+ GENDIR := $(TF_MAKEFILE_DIR)/gen/$(TARGET_OUT_DIR)/
+@@ -137,9 +135,9 @@ BENCHMARK_LIB := $(LIBDIR)$(BENCHMARK_LIB_NAME)
+ LCE_EXAMPLE_BINARY := $(BINDIR)lce_minimal
+ LCE_BENCHMARK_BINARY := $(BINDIR)lce_benchmark
+ 
+-CXX := $(CC_PREFIX)${TARGET_TOOLCHAIN_PREFIX}g++
+-CC := $(CC_PREFIX)${TARGET_TOOLCHAIN_PREFIX}gcc
+-AR := $(CC_PREFIX)${TARGET_TOOLCHAIN_PREFIX}ar
++CXX := ${CXX}
++CC := ${CC}
++AR := ${AR}
+ 
+ LCE_CORE_OBJS := $(addprefix $(OBJDIR), \
+ $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(LCE_CORE_SRCS)))))
+-- 
+2.17.1
+
