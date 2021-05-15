@@ -12,10 +12,10 @@ LICENSE = "OpenLDAP"
 LIC_FILES_CHKSUM = "file://${S}LICENSE;md5=153d07ef052c4a37a8fac23bc6031972"
 
 # LMDB version to use
-PV = "LMDB_0.9.24"
+PV = "LMDB_0.9.29"
 PR = "r0"
 
-SRCREV = "0c357cc88a00bda03aa4a982fc227a5872707df2"
+SRCREV = "8ad7be2510414b9506ec9f9e24f24d04d9b04a1a"
 SRC_URI = "\
     git://github.com/LMDB/lmdb.git;protocol=https;nobranch=1 \
     file://0001-change-for-cross-compilation.patch \

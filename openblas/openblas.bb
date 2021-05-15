@@ -11,7 +11,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${S}LICENSE;md5=5adf4792c949a00013ce25d476a2abc0"
 
 # Version to use
-PV = "0.3.10"
+PV = "0.3.15"
 PR = "r0"
 
 SRC_URI = "\

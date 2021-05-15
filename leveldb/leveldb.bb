@@ -10,7 +10,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${S}LICENSE;md5=92d1b128950b11ba8495b64938fc164d"
 
 # LevelDB version to use
-PV = "1.22"
+PV = "1.23"
 PR = "r0"
 
 SRC_URI = "git://github.com/google/leveldb.git;protocol=https;tag=${PV}"
