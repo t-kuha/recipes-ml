@@ -5,11 +5,11 @@
 SUMMARY = "Lightning Memory-Mapped Database"
 DESCRIPTION = "Lightning Memory-Mapped Database"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "OpenLDAP"
-LIC_FILES_CHKSUM = "file://${S}LICENSE;md5=153d07ef052c4a37a8fac23bc6031972"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=153d07ef052c4a37a8fac23bc6031972"
 
 # LMDB version to use
 PV = "LMDB_0.9.29"
@@ -25,9 +25,10 @@ do_unpack_append(){
     # Move files to top directory
     import shutil
     import glob
+    import os
     
     s = d.getVar('S')
-    flist = glob.glob(s + "libraries/liblmdb/*")
+    flist = glob.glob(os.path.join(s, 'libraries', 'liblmdb', '*'))
     for f in flist:
         shutil.move(f, s)
 }

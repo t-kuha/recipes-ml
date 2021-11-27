@@ -4,11 +4,11 @@
 SUMMARY = "OpenBLAS"
 DESCRIPTION = "OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD version."
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM = "file://${S}LICENSE;md5=5adf4792c949a00013ce25d476a2abc0"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=5adf4792c949a00013ce25d476a2abc0"
 
 # Version to use
 PV = "0.3.15"
