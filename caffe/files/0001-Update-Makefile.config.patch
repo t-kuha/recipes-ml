@@ -66,7 +66,7 @@ index d552b38..bf9007f 100644
  # Whatever else you find you need goes here.
 -INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 -LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
-+# INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
++INCLUDE_DIRS := $(PKG_CONFIG_SYSROOT_DIR)/usr/include/opencv4
 +# LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
  
  # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
