@@ -11,7 +11,7 @@ diff --git a/tensorflow/lite/tools/make/download_dependencies.sh b/tensorflow/li
 index 0ab8307b07a..6dab676f1b9 100755
 --- a/third_party/tensorflow/tensorflow/lite/tools/make/download_dependencies.sh
 +++ b/third_party/tensorflow/tensorflow/lite/tools/make/download_dependencies.sh
-@@ -77,7 +77,7 @@ download_and_extract() {
+@@ -87,7 +87,7 @@ download_and_extract() {
    rm -rf ${dir}/*  # Delete existing files.
    tempdir=$(mktemp -d)
    filepath="${tempdir}/$(basename ${url})"
