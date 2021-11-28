@@ -8,7 +8,7 @@ DESCRIPTION = "TensorFlow Lite is TensorFlow's lightweight solution for mobile a
 PV = "1.15.5"
 PR = "r0"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "Apache-2.0"
@@ -24,8 +24,8 @@ SRC_URI = "\
     "
 
 do_compile(){
-    ${S}tensorflow/lite/tools/make/download_dependencies.sh
-    oe_runmake -f ${S}tensorflow/lite/tools/make/Makefile \
+    ${S}/tensorflow/lite/tools/make/download_dependencies.sh
+    oe_runmake -f ${S}/tensorflow/lite/tools/make/Makefile \
     TARGET_ARCH=${OECORE_TARGET_ARCH}
 }
 
@@ -33,8 +33,8 @@ do_install(){
     mkdir -p ${D}${bindir}
     mkdir -p ${D}${libdir}
 
-    cp -R ${S}tensorflow/lite/tools/make/gen/linux_/bin/* ${D}${bindir}
-    cp -R ${S}tensorflow/lite/tools/make/gen/linux_/lib/* ${D}${libdir}
+    cp -R ${S}/tensorflow/lite/tools/make/gen/linux_/bin/* ${D}${bindir}
+    cp -R ${S}/tensorflow/lite/tools/make/gen/linux_/lib/* ${D}${libdir}
 }
 
 
