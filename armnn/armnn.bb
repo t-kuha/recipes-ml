@@ -15,7 +15,6 @@ LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=3e14a924c16f7d828b8335a59da64074"
 
-# The patch is based on https://review.mlplatform.org/c/ml/armnn/+/3906
 SRC_URI = " \
     git://github.com/ARM-software/armnn;protocol=https;nobranch=1;tag=v${PV} \
     "
