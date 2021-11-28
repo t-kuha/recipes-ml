@@ -8,10 +8,10 @@ DESCRIPTION = "The ARM Computer Vision and Machine Learning library is a set of 
 COMPATIBLE_MACHINE = "armv7a|aarch64"
 
 # Version to use
-PV = "21.02"
+PV = "21.11"
 PR = "r0"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "MIT"
@@ -22,7 +22,7 @@ DEPENDS = "coreutils-native "
 
 SRC_URI = "\
     git://github.com/ARM-software/ComputeLibrary.git;protocol=https;tag=v${PV} \
-	file://0001-Fix-compiler-option-confliction.patch \
+	file://0001-Fix-compiler-option-for-armv7a.patch \
 "
 
 inherit scons
@@ -58,9 +58,9 @@ do_install(){
     mkdir -p ${D}${libdir}
     mkdir -p ${D}${includedir}
 
-    cp -R ${S}build/_install/bin/* ${D}${bindir}
-    cp -R ${S}build/*.so* ${D}${libdir}
-    cp -R ${S}build/_install/include/* ${D}${includedir}
+    cp -R ${S}/build/_install/bin/* ${D}${bindir}
+    cp -R ${S}/build/*.so* ${D}${libdir}
+    cp -R ${S}/build/_install/include/* ${D}${includedir}
 }
 
 INSANE_SKIP_${PN} = "ldflags rdepends "

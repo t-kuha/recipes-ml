@@ -1,25 +1,25 @@
-From 60260f04df043a47c381a396fd3adddfed43dbf6 Mon Sep 17 00:00:00 2001
+From 6ab9296504a83f188b5264f21971466284a67979 Mon Sep 17 00:00:00 2001
 From: t-kuha <imagingtechnerd@gmail.com>
-Date: Sat, 17 Apr 2021 07:11:36 +0000
-Subject: [PATCH] Fix compiler option confliction
+Date: Sun, 28 Nov 2021 03:48:44 +0000
+Subject: [PATCH] Fix compiler option for armv7a
 
 ---
  SConstruct | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SConstruct b/SConstruct
-index 274326f67..970e9f63e 100644
+index 400228c71..3131a7961 100644
 --- a/SConstruct
 +++ b/SConstruct
-@@ -206,7 +206,7 @@ if 'v7a' in env['estate'] and env['estate'] == '64':
+@@ -251,7 +251,7 @@ if 'v7a' in env['estate'] and env['estate'] == '64':
  # Add architecture specific flags
  prefix = ""
  if 'v7a' in env['arch']:
 -    env.Append(CXXFLAGS = ['-march=armv7-a', '-mthumb', '-mfpu=neon'])
 +    env.Append(CXXFLAGS = ['-mthumb', '-mfpu=neon'])
-     if env['os'] == 'android' or env['os'] == 'tizen':
+     if (env['os'] == 'android' or env['os'] == 'tizen') and not 'hf' in env['arch']:
          env.Append(CXXFLAGS = ['-mfloat-abi=softfp'])
      else:
 -- 
-2.17.1
+2.25.1
 

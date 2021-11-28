@@ -6,10 +6,10 @@ SUMMARY = "ARM NN"
 DESCRIPTION = "Arm NN ML Software."
 
 # Version to use
-PV = "21.02"
+PV = "21.11"
 PR = "r0"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 
 LICENSE = "MIT"
 
