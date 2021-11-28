@@ -40,11 +40,6 @@ do_unpack_append(){
     shutil.copy(os.path.join(s, 'Makefile.config.example'), os.path.join(s, 'Makefile.config'))
 }
 
-# do_configure_prepend(){
-#     # Fix include path for OpenCV4
-#     find ${S} -type f -name *.cpp | xargs sed -i -e s/"opencv2\/"/"opencv4\/opencv2\/"/g
-# }
-# CV_LOAD_IMAGE_GRAYSCALE and CV_LOAD_IMAGE_COLOR are not defined anymore and should be replaced by cv::IMREAD_COLOR and cv::IMREAD_GRAYSCALE
 do_compile () {
     oe_runmake distribute
 }
