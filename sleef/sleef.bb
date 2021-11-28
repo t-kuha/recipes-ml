@@ -1,24 +1,24 @@
-# 
-# sleef (Exclusively for native build)
-# 
+#
+# sleef (Exclusively for native build / does not support cross compilation)
+#
 
 SUMMARY = "sleef"
 DESCRIPTION = "SIMD Library for Evaluating Elementary Functions, vectorized libm and DFT"
 
 # Version to use
-PV = "3.4.1"
+PV = "3.5.1"
 PR = "r0"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 LICENSE = "BSL-1.0"
 
 LIC_FILES_CHKSUM = "file://${S}/LICENSE.txt;md5=e4224ccaecb14d942c71d31bef20d78c  "
 
-SRCREV = "7f523de651585fe25cade462efccca647dcc8d02"
+# SRCREV = "7f523de651585fe25cade462efccca647dcc8d02"
 SRC_URI = " \
-    git://github.com/shibatch/sleef.git;protocol=https \
+    git://github.com/shibatch/sleef.git;protocol=https;tag=${PV};nobranch=1 \
 "
 
 inherit cmake 
