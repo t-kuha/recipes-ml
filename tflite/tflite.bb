@@ -1,3 +1,4 @@
+#
 # TensorFlow Lite (TF v1)
 # 
 
@@ -16,7 +17,6 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=64a34301f8e355f57ec992c2af3e5157"
 
 DEPENDS = "wget-native unzip-native "
 
-# "0003-Fix-Eigen-download-link.patch" is based on https://github.com/tensorflow/tensorflow/issues/43348
 SRC_URI = "\
     git://github.com/tensorflow/tensorflow.git;protocol=https;tag=v${PV};nobranch=1 \
     file://0001-Update-download_dependencies.sh.patch \
@@ -30,29 +30,9 @@ do_compile(){
 }
 
 do_install(){
-    mkdir -p ${D}${bindir}
-    mkdir -p ${D}${libdir}
+    install -d ${D}${bindir}
+    install -d ${D}${libdir}
 
-    cp -R ${S}/tensorflow/lite/tools/make/gen/linux_/bin/* ${D}${bindir}
-    cp -R ${S}/tensorflow/lite/tools/make/gen/linux_/lib/* ${D}${libdir}
+    install -m 755 ${S}/tensorflow/lite/tools/make/gen/linux_/bin/* ${D}${bindir}
+    install -m 755 ${S}/tensorflow/lite/tools/make/gen/linux_/lib/* ${D}${libdir}
 }
-
-
-FILES_${PN} += " \
-    ${bindir}/* \
-"
-
-FILES_${PN}-dev += " \
-    ${bindir}/* \
-    ${libdir}/* \
-"
-
-FILES_${PN}-staticdev += " \
-    ${bindir}/* \
-    ${libdir}/* \
-"
-
-FILES_${PN}-dbg += " \
-    ${bindir}/* \
-    ${bindir}/.debug/* \
-"
