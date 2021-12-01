@@ -36,7 +36,7 @@ index 4d324160c..94e96f36f 100644
 +USE_HDF5 ?= 1
  
  ifeq ($(USE_LEVELDB), 1)
- 	LIBRARIES += leveldb snappy
+ 	LIBRARIES += leveldb
 @@ -199,6 +201,10 @@ ifeq ($(USE_OPENCV), 1)
  	endif
  

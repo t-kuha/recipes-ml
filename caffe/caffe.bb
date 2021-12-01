@@ -20,15 +20,16 @@ SRC_URI = "\
     file://0002-Use-CPU-as-solver-mode.patch \
     file://0003-Fix-test-when-CPU-only-mode.patch \
     file://0004-Remove-Python-from-build-target.patch \
-    file://0005_disable-hdf5.patch \
-    file://0006-Update-for-OpenCV-4.patch \
+    file://0005-Remove-snappy.patch \
+    file://0006-Disable-hdf5.patch \
+    file://0007-Update-for-OpenCV-4.patch \
 "
 
 S = "${WORKDIR}/git"
 
 # Dependencies
 DEPENDS = "protobuf boost gflags glog opencv "
-DEPENDS += "leveldb snappy lmdb openblas "
+DEPENDS += "leveldb lmdb openblas "
 DEPENDS += "protobuf-native "
 
 do_unpack_append(){

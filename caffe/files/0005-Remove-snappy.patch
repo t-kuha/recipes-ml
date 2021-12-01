@@ -1,0 +1,25 @@
+From 5bc7a04d9fc7a73184b27f24a600bb19f5a5f259 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Wed, 1 Dec 2021 23:02:54 +0900
+Subject: [PATCH] Remove snappy
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 4d324160c..4b0c72962 100644
+--- a/Makefile
++++ b/Makefile
+@@ -186,7 +186,7 @@ USE_LMDB ?= 1
+ USE_OPENCV ?= 1
+ 
+ ifeq ($(USE_LEVELDB), 1)
+-	LIBRARIES += leveldb snappy
++	LIBRARIES += leveldb
+ endif
+ ifeq ($(USE_LMDB), 1)
+ 	LIBRARIES += lmdb
+-- 
+2.25.1
+
