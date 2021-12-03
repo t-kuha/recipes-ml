@@ -1,44 +1,36 @@
 # 
 # LMDB
+#   Based on: https://phabricator.kde.org/R868:f096b1e5112ffc0f2c669b3f15531fdc0ff06e9b
 # 
 
 SUMMARY = "Lightning Memory-Mapped Database"
 DESCRIPTION = "Lightning Memory-Mapped Database"
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/git/libraries/liblmdb"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 LICENSE = "OpenLDAP"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=153d07ef052c4a37a8fac23bc6031972"
 
 # LMDB version to use
-PV = "LMDB_0.9.29"
+PV = "0.9.29"
 PR = "r0"
 
-SRCREV = "8ad7be2510414b9506ec9f9e24f24d04d9b04a1a"
 SRC_URI = "\
-    git://github.com/LMDB/lmdb.git;protocol=https;nobranch=1 \
+    git://github.com/LMDB/lmdb.git;protocol=https;tag=LMDB_${PV};nobranch=1 \
     file://0001-change-for-cross-compilation.patch \
-    "
+"
 
-do_unpack_append(){
-    # Move files to top directory
-    import shutil
-    import glob
-    import os
-    
-    s = d.getVar('S')
-    flist = glob.glob(os.path.join(s, 'libraries', 'liblmdb', '*'))
-    for f in flist:
-        shutil.move(f, s)
-}
+inherit base
 
 do_compile () {
-    oe_runmake
+    oe_runmake SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV}"
 }
 
 do_install () {
-    oe_runmake install 'DESTDIR=${D}'
+    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV}"
+    cd ${D}/${libdir}
+    ln -s liblmdb.so.${PV} liblmdb.so
 }
 
-INSANE_SKIP_${PN}-dev += "dev-elf"
+INSANE_SKIP += "ldflags"
