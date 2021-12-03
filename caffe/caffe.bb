@@ -28,9 +28,8 @@ SRC_URI = "\
 S = "${WORKDIR}/git"
 
 # Dependencies
-DEPENDS = "protobuf boost gflags glog opencv "
-DEPENDS += "leveldb lmdb openblas "
-DEPENDS += "protobuf-native "
+RDEPENDS_${PN} = "protobuf boost gflags glog opencv leveldb lmdb openblas "
+DEPENDS += "protobuf boost gflags glog opencv leveldb lmdb openblas protobuf-native "
 
 do_unpack_append(){
     # Copy Makefile.config.example as Makefile.config
