@@ -10,9 +10,9 @@ __oneDNN__: oneAPI Deep Neural Network Library (v2.4.4)
 
 __caffe__: Caffe v1.0
 
-__libtorch__: PyTorch C++ API (v1.8.1)
+__libtorch__: PyTorch C++ API (v1.10.0)
 
-__torchvision__: Torch Vision (v0.9.1)
+__torchvision__: Torch Vision (v0.11.1)
 
 __tflite__: TensorFlow Lite (TF v1.15.5)
 
@@ -26,6 +26,6 @@ __larq-compute-engine__: Larq Compute Engine (v0.6.2)
 
 - Ample amount of RAM will be necessary (preferably 3GB per CPU core)
 
-- Python (>= 3.6) is required for configuring libtorch
+- Python (>= 3.6) is required for configuring libtorchcd ../..
 
 - yaml (pyyaml), dataclasses, and typing_extensions packages are necessary for configuration
