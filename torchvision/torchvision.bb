@@ -6,10 +6,10 @@ SUMMARY = "torchvision"
 DESCRIPTION = "Datasets, Transforms and Models specific to Computer Vision"
 
 # Version to use
-PV = "0.9.1"
+PV = "0.11.1"
 PR = "r0"
 
-S = "${WORKDIR}/git/"
+S = "${WORKDIR}/git"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 LICENSE = "BSD-3-Clause"
@@ -18,12 +18,12 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=bd7749a3307486a4d4bfefbc81c8b796"
 
 SRC_URI = " \
     git://github.com/pytorch/vision.git;protocol=https;nobranch=1;tag=v${PV} \
-	file://0001-remove-python-from-build.patch \
-	file://0002-remove-python-from-build.patch \
+    file://0001-remove-python-from-build.patch \
+    file://0002-remove-python-from-build.patch \
 "
 
-DEPENDS += "libtorch jpeg libpng "
-DEPENDS += "protobuf-native "
+RDEPENDS_${PN} += "libtorch jpeg libpng "
+DEPENDS += "protobuf-native libtorch jpeg libpng "
 
 inherit cmake 
 
