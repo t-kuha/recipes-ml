@@ -16,7 +16,7 @@ __torchvision__: Torch Vision (v0.9.1)
 
 __tflite__: TensorFlow Lite (TF v1.15.5)
 
-__tflite2__: TensorFlow Lite (TF v2.4.1)
+__tflite2__: TensorFlow Lite (TF v2.7.0)
 
 __larq-compute-engine__: Larq Compute Engine (v0.6.2)
 

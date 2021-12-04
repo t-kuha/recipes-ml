@@ -1,0 +1,80 @@
+From b210cdd43ee5f3d91047cc9f067f301fb3961bea Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 4 Dec 2021 14:10:17 +0900
+Subject: [PATCH] Disable Hexagon delegate
+
+---
+ tools/evaluation/utils.cc | 54 +++++++++++------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/tools/evaluation/utils.cc b/tools/evaluation/utils.cc
+index 16edffce327..59563c735d7 100644
+--- a/tools/evaluation/utils.cc
++++ b/tools/evaluation/utils.cc
+@@ -137,36 +137,36 @@ TfLiteDelegatePtr CreateGPUDelegate() {
+ 
+ TfLiteDelegatePtr CreateHexagonDelegate(
+     const std::string& library_directory_path, bool profiling) {
+-#if !defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
+-  TfLiteHexagonDelegateOptions options = {0};
+-  options.print_graph_profile = profiling;
+-  return CreateHexagonDelegate(&options, library_directory_path);
+-#else
++// #if !defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
++//   TfLiteHexagonDelegateOptions options = {0};
++//   options.print_graph_profile = profiling;
++//   return CreateHexagonDelegate(&options, library_directory_path);
++// #else
+   return CreateNullDelegate();
+-#endif  // defined(__arm__)
++// #endif  // defined(__arm__)
+ }
+ 
+-#if !defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
+-TfLiteDelegatePtr CreateHexagonDelegate(
+-    const TfLiteHexagonDelegateOptions* options,
+-    const std::string& library_directory_path) {
+-  if (library_directory_path.empty()) {
+-    TfLiteHexagonInit();
+-  } else {
+-    TfLiteHexagonInitWithPath(library_directory_path.c_str());
+-  }
+-
+-  TfLiteDelegate* delegate = TfLiteHexagonDelegateCreate(options);
+-  if (!delegate) {
+-    TfLiteHexagonTearDown();
+-    return CreateNullDelegate();
+-  }
+-  return TfLiteDelegatePtr(delegate, [](TfLiteDelegate* delegate) {
+-    TfLiteHexagonDelegateDelete(delegate);
+-    TfLiteHexagonTearDown();
+-  });
+-}
+-#endif
++// #if !defined(__APPLE__) && (defined(__arm__) || defined(__aarch64__))
++// TfLiteDelegatePtr CreateHexagonDelegate(
++//     const TfLiteHexagonDelegateOptions* options,
++//     const std::string& library_directory_path) {
++//   if (library_directory_path.empty()) {
++//     TfLiteHexagonInit();
++//   } else {
++//     TfLiteHexagonInitWithPath(library_directory_path.c_str());
++//   }
++
++//   TfLiteDelegate* delegate = TfLiteHexagonDelegateCreate(options);
++//   if (!delegate) {
++//     TfLiteHexagonTearDown();
++//     return CreateNullDelegate();
++//   }
++//   return TfLiteDelegatePtr(delegate, [](TfLiteDelegate* delegate) {
++//     TfLiteHexagonDelegateDelete(delegate);
++//     TfLiteHexagonTearDown();
++//   });
++// }
++// #endif
+ 
+ #if defined(TFLITE_WITHOUT_XNNPACK)
+ TfLiteDelegatePtr CreateXNNPACKDelegate(int num_threads) {
+-- 
+2.25.1
+
