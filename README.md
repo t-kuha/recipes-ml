@@ -6,6 +6,8 @@ __arm-computelibrary__: ARM ComputeLibrary (v21.11)
 
 __armnn__: Arm NN ML Software (v21.11)
 
+__oneDNN__: oneAPI Deep Neural Network Library (v2.4.4)
+
 __caffe__: Caffe v1.0
 
 __libtorch__: PyTorch C++ API (v1.8.1)
