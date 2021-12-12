@@ -1,0 +1,70 @@
+From e9493b79f312abd5ef9cc1db743c9224207f86dd Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 11 Dec 2021 21:25:49 +0900
+Subject: [PATCH] Pass env. var. to CMake
+
+---
+ setup.py                     | 8 +++++---
+ tools/setup_helpers/cmake.py | 6 ++++--
+ 2 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 6d9ed53dc6..44bf5a74f0 100644
+--- a/setup.py
++++ b/setup.py
+@@ -296,7 +296,7 @@ else:
+     cmake_python_library = "{}/{}".format(
+         sysconfig.get_config_var("LIBDIR"),
+         sysconfig.get_config_var("INSTSONAME"))
+-cmake_python_include_dir = sysconfig.get_path("include")
++cmake_python_include_dir = os.environ['PYTHON_INCLUDE_DIR']
+ 
+ 
+ ################################################################################
+@@ -811,7 +811,7 @@ def configure_extension_build():
+                   sources=main_sources,
+                   language='c',
+                   extra_compile_args=main_compile_args + extra_compile_args,
+-                  include_dirs=[],
++                  include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
+                   library_dirs=library_dirs,
+                   extra_link_args=extra_link_args + main_link_args + make_relative_rpath_args('lib'))
+     extensions.append(C)
+@@ -819,7 +819,9 @@ def configure_extension_build():
+     if not IS_WINDOWS:
+         DL = Extension("torch._dl",
+                        sources=["torch/csrc/dl.c"],
+-                       language='c')
++                       language='c',
++                       include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
++                       library_dirs=library_dirs,)
+         extensions.append(DL)
+ 
+     # These extensions are built by cmake and copied manually in build_extensions()
+diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
+index ed0df72e89..28b7e0a337 100644
+--- a/tools/setup_helpers/cmake.py
++++ b/tools/setup_helpers/cmake.py
+@@ -264,6 +264,8 @@ class CMake:
+              'ONNX_NAMESPACE',
+              'ATEN_THREADING',
+              'WERROR',
++             'NATIVE_BUILD_DIR',
++             'CAFFE2_CUSTOM_PROTOC_EXECUTABLE',
+              'OPENSSL_ROOT_DIR')
+         })
+ 
+@@ -320,8 +322,8 @@ class CMake:
+ 
+         CMake.defines(args,
+                       PYTHON_EXECUTABLE=sys.executable,
+-                      PYTHON_LIBRARY=cmake_python_library,
+-                      PYTHON_INCLUDE_DIR=sysconfig.get_path('include'),
++                      PYTHON_LIBRARY=os.environ['PYTHON_LIBRARY'],
++                      PYTHON_INCLUDE_DIR=os.environ['PYTHON_INCLUDE_DIR'],
+                       TORCH_BUILD_VERSION=version,
+                       NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
+                       **build_options)
+-- 
+2.25.1
+

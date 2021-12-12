@@ -1,0 +1,98 @@
+From d32ef68398436d92562b4b2d9ed741463c826c99 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Mon, 6 Dec 2021 14:04:01 +0000
+Subject: [PATCH] Fix compile error
+
+---
+ cmake/Dependencies.cmake | 61 ++++++++++++++++++++--------------------
+ 1 file changed, 31 insertions(+), 30 deletions(-)
+
+diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+index ca560288a4..caf74ca17c 100644
+--- a/cmake/Dependencies.cmake
++++ b/cmake/Dependencies.cmake
+@@ -942,6 +942,25 @@ else()
+ endif()
+ include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+ 
++# ---[ pybind11
++if(USE_SYSTEM_BIND11)
++  find_package(pybind11 CONFIG)
++  if(NOT pybind11_FOUND)
++    find_package(pybind11)
++  endif()
++  if(NOT pybind11_FOUND)
++    message(FATAL "Cannot find system pybind11")
++  endif()
++else()
++    message(STATUS "Using third_party/pybind11.")
++    set(pybind11_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../third_party/pybind11/include)
++    install(DIRECTORY ${pybind11_INCLUDE_DIRS}
++            DESTINATION ${CMAKE_INSTALL_PREFIX}
++            FILES_MATCHING PATTERN "*.h")
++endif()
++message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
++include_directories(SYSTEM ${pybind11_INCLUDE_DIRS})
++
+ # ---[ Python + Numpy
+ if(BUILD_PYTHON)
+   # If not given a Python installation, then use the current active Python
+@@ -958,17 +977,18 @@ if(BUILD_PYTHON)
+ 
+   # Check that Python works
+   set(PYTHON_VERSION)
+-  if(DEFINED PYTHON_EXECUTABLE)
+-    execute_process(
+-        COMMAND "${PYTHON_EXECUTABLE}" "--version"
+-        RESULT_VARIABLE _exitcode OUTPUT_VARIABLE PYTHON_VERSION)
+-    if(NOT _exitcode EQUAL 0)
+-      message(FATAL_ERROR "The Python executable ${PYTHON_EXECUTABLE} cannot be run. Make sure that it is an absolute path.")
+-    endif()
+-    if(PYTHON_VERSION)
+-      string(REGEX MATCH "([0-9]+)\\.([0-9]+)" PYTHON_VERSION ${PYTHON_VERSION})
+-    endif()
+-  endif()
++  # if(DEFINED PYTHON_EXECUTABLE)
++  #   execute_process(
++  #       COMMAND "${PYTHON_EXECUTABLE}" "--version"
++  #       RESULT_VARIABLE _exitcode OUTPUT_VARIABLE PYTHON_VERSION)
++  #   if(NOT _exitcode EQUAL 0)
++  #     message(FATAL_ERROR "The Python executable ${PYTHON_EXECUTABLE} cannot be run. Make sure that it is an absolute path.")
++  #   endif()
++  #   if(PYTHON_VERSION)
++  #     string(REGEX MATCH "([0-9]+)\\.([0-9]+)" PYTHON_VERSION ${PYTHON_VERSION})
++  #   endif()
++  # endif()
++  set(PYTHONLIBS_VERSION_STRING "3.8.5")
+ 
+   # Seed PYTHON_INCLUDE_DIR and PYTHON_LIBRARY to be consistent with the
+   # executable that we already found (if we didn't actually find an executable
+@@ -1038,25 +1058,6 @@ if(BUILD_PYTHON)
+   endif()
+ endif()
+ 
+-# ---[ pybind11
+-if(USE_SYSTEM_BIND11)
+-  find_package(pybind11 CONFIG)
+-  if(NOT pybind11_FOUND)
+-    find_package(pybind11)
+-  endif()
+-  if(NOT pybind11_FOUND)
+-    message(FATAL "Cannot find system pybind11")
+-  endif()
+-else()
+-    message(STATUS "Using third_party/pybind11.")
+-    set(pybind11_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/../third_party/pybind11/include)
+-    install(DIRECTORY ${pybind11_INCLUDE_DIRS}
+-            DESTINATION ${CMAKE_INSTALL_PREFIX}
+-            FILES_MATCHING PATTERN "*.h")
+-endif()
+-message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
+-include_directories(SYSTEM ${pybind11_INCLUDE_DIRS})
+-
+ # ---[ MPI
+ if(USE_MPI)
+   find_package(MPI)
+-- 
+2.25.1
+
