@@ -58,6 +58,8 @@ do_install(){
     mkdir -p ${D}${libdir}
     mkdir -p ${D}${includedir}
 
+    rm -r ${S}/build/_install/include/CL
+
     cp -R ${S}/build/_install/bin/* ${D}${bindir}
     cp -R ${S}/build/*.so* ${D}${libdir}
     cp -R ${S}/build/_install/include/* ${D}${includedir}
