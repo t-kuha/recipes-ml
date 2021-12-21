@@ -6,7 +6,7 @@ SUMMARY = "libtorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "1.10.0"
+PV = "1.10.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -51,6 +51,22 @@ EXTRA_OECMAKE = "\
     -DCMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES=${STAGING_INCDIR} \
     -DCMAKE_CROSSCOMPILING=ON \
 "
+
+do_configure_prepend(){
+#    cd ${S}
+#    git submodule sync
+#    git submodule update --init --recursive --jobs=$(nproc)
+
+    # Use sed - we cannot "git patch" before fetching submodules
+#    find . -type f -name "Configure.cmake" | xargs sed -i -e s/"set(ORG_CMAKE_C_FLAGS\ CMAKE_C_FLAGS)"/"set(ORG_CMAKE_C_FLAGS\ \$\{CMAKE_C_FLAGS\})"/g
+#    find . -type f -name "CMakeLists.txt" | xargs sed -i -e s/"set(CMAKE_C_FLAGS\ ORG_CMAKE_C_FLAGS)"/"set(CMAKE_C_FLAGS \$\{ORG_CMAKE_C_FLAGS\})"/g
+#    find . -type f -name "CMakeLists.txt" | xargs sed -i -e s/"string(CONCAT\ CMAKE_C_FLAGS\ \${SLEEF_C_FLAGS})"/"string(CONCAT\ CMAKE_C_FLAGS\ \${CMAKE_C_FLAGS}\ \"\ \" \${SLEEF_C_FLAGS})"/g
+
+    cd ${S}/third_party/cpuinfo
+    sed -i -e s/"|aarch64)"/"|aarch64|arm)"/g CMakeLists.txt
+    sed -i -e s/"\^armv\[5-8\]"/"\^armv\[5-8\]|arm"/g CMakeLists.txt
+	sed -i -e s/"|arm64)"/"|arm64|arm)"/g CMakeLists.txt
+}
 
 INSANE_SKIP_${PN}-dev += "dev-elf "
 
