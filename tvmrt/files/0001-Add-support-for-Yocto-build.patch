@@ -1,0 +1,51 @@
+From d7b6767b26d5b616be418b66f3c86c11c07472be Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Thu, 16 Dec 2021 21:01:03 +0900
+Subject: [PATCH] Add support for Yocto
+
+---
+ cmake/modules/contrib/VitisAI.cmake | 23 +++--------------------
+ 1 file changed, 3 insertions(+), 20 deletions(-)
+
+diff --git a/cmake/modules/contrib/VitisAI.cmake b/cmake/modules/contrib/VitisAI.cmake
+index 083bd6d7ad..b7321f1a0d 100644
+--- a/cmake/modules/contrib/VitisAI.cmake
++++ b/cmake/modules/contrib/VitisAI.cmake
+@@ -17,31 +17,14 @@
+ 
+ if(USE_VITIS_AI)
+   set(PYXIR_SHARED_LIB libpyxir.so)
+-  find_package(PythonInterp 3.6 REQUIRED)
+-  if(NOT PYTHON)
+-    find_program(PYTHON NAMES python3 python3.6)
+-  endif()
+-  execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+-    "import pyxir as px; print(px.get_include_dir()); print(px.get_lib_dir());"
+-    RESULT_VARIABLE __result
+-    OUTPUT_VARIABLE __output
+-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+-
+-  if(__result MATCHES 0)
+-    string(REGEX REPLACE ";" "\\\\;" __values ${__output})
+-    string(REGEX REPLACE "\r?\n" ";"    __values ${__values})
+-    list(GET __values 0 PYXIR_INCLUDE_DIR)
+-    list(GET __values 1 PYXIR_LIB_DIR)
+-  else()
+-    message(FATAL_ERROR "Can't build TVM with Vitis-AI because PyXIR can't be found")
+-  endif()
++  find_package(Python3 3.8 REQUIRED COMPONENTS Development)
+   message(STATUS "Build with contrib.vitisai")
+-  include_directories(${PYXIR_INCLUDE_DIR})  
++  include_directories(${Python3_RUNTIME_LIBRARY_DIRS}/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages/pyxir/include)
+   file(GLOB VAI_CONTRIB_SRC src/runtime/contrib/vitis_ai/*.cc)
+   file(GLOB COMPILER_VITIS_AI_SRCS
+        CONFIGURE_DEPENDS src/relay/backend/contrib/vitis_ai/*)
+   list(APPEND COMPILER_SRCS ${COMPILER_VITIS_AI_SRCS})
+-  link_directories(${PYXIR_LIB_DIR})
++  link_directories(${Python3_RUNTIME_LIBRARY_DIRS}/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}/site-packages)
+   list(APPEND TVM_RUNTIME_LINKER_LIBS "pyxir")
+   list(APPEND RUNTIME_SRCS ${VAI_CONTRIB_SRC})
+ endif(USE_VITIS_AI)
+-- 
+2.25.1
+
