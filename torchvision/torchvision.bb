@@ -6,7 +6,7 @@ SUMMARY = "torchvision"
 DESCRIPTION = "Datasets, Transforms and Models specific to Computer Vision"
 
 # Version to use
-PV = "0.11.1"
+PV = "0.11.2"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -31,7 +31,7 @@ EXTRA_OECMAKE = "\
     -DCMAKE_BUILD_TYPE=Release \
     -DWITH_CUDA=OFF \
     -DTorch_DIR=${DEPEND_DIR}/usr/share/cmake/Torch \
-	-DCMAKE_SKIP_RPATH=TRUE \
+    -DCMAKE_SKIP_RPATH=TRUE \
 "
 
 INSANE_SKIP_${PN}-dev += "dev-elf"
