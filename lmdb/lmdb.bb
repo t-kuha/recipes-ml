@@ -28,8 +28,8 @@ do_compile () {
 }
 
 do_install () {
-    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}
-"
+    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}"
+
     cd ${D}/${libdir}
     ln -s liblmdb.so.${PV} liblmdb.so
 }
