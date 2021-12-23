@@ -24,13 +24,12 @@ SRC_URI = "\
 inherit base
 
 do_compile () {
-    oe_runmake SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV}"
+    oe_runmake SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}"
 }
 
 do_install () {
-    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV}"
+    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}
+"
     cd ${D}/${libdir}
     ln -s liblmdb.so.${PV} liblmdb.so
 }
-
-INSANE_SKIP += "ldflags"
