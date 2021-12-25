@@ -1,6 +1,6 @@
 # 
 # LMDB
-#   Based on: https://phabricator.kde.org/R868:f096b1e5112ffc0f2c669b3f15531fdc0ff06e9b
+#   Reference: https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18842475/PetaLinux+Yocto+Tips
 # 
 
 SUMMARY = "Lightning Memory-Mapped Database"
@@ -23,13 +23,12 @@ SRC_URI = "\
 
 inherit base
 
-do_compile () {
-    oe_runmake SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}"
-}
+EXTRA_OEMAKE = "SOEXT='.so.${PV}' LDFLAGS='-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}'"
 
 do_install () {
-    oe_runmake install DESTDIR=${D} SOEXT=".so.${PV}" LDFLAGS="-Wl,-soname,lib${PN}.so.${PV} ${LDFLAGS}"
+    install -d ${D}${libdir}
+    oe_libinstall -so lib${PN} ${D}${libdir}
 
-    cd ${D}/${libdir}
-    ln -s liblmdb.so.${PV} liblmdb.so
+    install -d -m 0655 ${D}${includedir}
+    install -m 0644 ${S}/lmdb.h ${D}${includedir}
 }
