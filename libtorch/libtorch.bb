@@ -59,6 +59,10 @@ do_configure_prepend(){
 	sed -i -e s/"|arm64)"/"|arm64|arm)"/g CMakeLists.txt
 }
 
+do_install_append(){
+    rm -r ${D}${includedir}/pybind11
+}
+
 INSANE_SKIP_${PN}-dev += "dev-elf "
 
 FILES_${PN} += " \
