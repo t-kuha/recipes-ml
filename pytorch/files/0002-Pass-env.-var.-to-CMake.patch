@@ -1,15 +1,15 @@
-From e9493b79f312abd5ef9cc1db743c9224207f86dd Mon Sep 17 00:00:00 2001
+From 41f0b58e5012a375be7849213f021874e9596ef8 Mon Sep 17 00:00:00 2001
 From: t-kuha <imagingtechnerd@gmail.com>
-Date: Sat, 11 Dec 2021 21:25:49 +0900
-Subject: [PATCH] Pass env. var. to CMake
+Date: Wed, 5 Jan 2022 20:45:52 +0900
+Subject: [PATCH] Add support for Python and NumPy
 
 ---
- setup.py                     | 8 +++++---
- tools/setup_helpers/cmake.py | 6 ++++--
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ setup.py                     |  8 +++++---
+ tools/setup_helpers/cmake.py | 12 +++++++-----
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/setup.py b/setup.py
-index 6d9ed53dc6..44bf5a74f0 100644
+index 6d9ed53dc66..44bf5a74f06 100644
 --- a/setup.py
 +++ b/setup.py
 @@ -296,7 +296,7 @@ else:
@@ -42,9 +42,18 @@ index 6d9ed53dc6..44bf5a74f0 100644
  
      # These extensions are built by cmake and copied manually in build_extensions()
 diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
-index ed0df72e89..28b7e0a337 100644
+index ed0df72e898..a380abfc4d7 100644
 --- a/tools/setup_helpers/cmake.py
 +++ b/tools/setup_helpers/cmake.py
+@@ -13,7 +13,7 @@ from typing import IO, Any, Dict, List, Optional, Union, cast
+ 
+ from . import which
+ from .env import (BUILD_DIR, IS_64BIT, IS_DARWIN, IS_WINDOWS, check_negative_env_flag)
+-from .numpy_ import USE_NUMPY, NUMPY_INCLUDE_DIR
++# from .numpy_ import USE_NUMPY, NUMPY_INCLUDE_DIR
+ 
+ 
+ def _mkdir_p(d: str) -> None:
 @@ -264,6 +264,8 @@ class CMake:
               'ONNX_NAMESPACE',
               'ATEN_THREADING',
@@ -54,7 +63,16 @@ index ed0df72e89..28b7e0a337 100644
               'OPENSSL_ROOT_DIR')
          })
  
-@@ -320,8 +322,8 @@ class CMake:
+@@ -301,7 +303,7 @@ class CMake:
+             'BUILD_TEST': build_test,
+             # Most library detection should go to CMake script, except this one, which Python can do a much better job
+             # due to NumPy's inherent Pythonic nature.
+-            'USE_NUMPY': USE_NUMPY,
++            # 'USE_NUMPY': USE_NUMPY,
+         })
+ 
+         # Options starting with CMAKE_
+@@ -320,10 +322,10 @@ class CMake:
  
          CMake.defines(args,
                        PYTHON_EXECUTABLE=sys.executable,
@@ -63,8 +81,11 @@ index ed0df72e89..28b7e0a337 100644
 +                      PYTHON_LIBRARY=os.environ['PYTHON_LIBRARY'],
 +                      PYTHON_INCLUDE_DIR=os.environ['PYTHON_INCLUDE_DIR'],
                        TORCH_BUILD_VERSION=version,
-                       NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
+-                      NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
++                      NUMPY_INCLUDE_DIR=os.environ['NUMPY_INCLUDE_DIR'],
                        **build_options)
+ 
+         expected_wrapper = '/usr/local/opt/ccache/libexec'
 -- 
 2.25.1
 

@@ -6,7 +6,7 @@ SUMMARY = "PyTorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "1.10.0"
+PV = "1.10.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -39,27 +39,17 @@ do_configure_prepend(){
     pip3 install pyyaml typing_extensions
 }
 
-do_configure() {
-        export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
-        export _GLIBCXX_USE_CXX11_ABI=1
-        export NATIVE_BUILD_DIR=${STAGING_DIR_NATIVE}/usr
-        export CAFFE2_CUSTOM_PROTOC_EXECUTABLE=${STAGING_DIR_NATIVE}/usr/bin/protoc
-        export USE_DISTRIBUTED=OFF
-        export USE_XNNPACK=OFF
-        export PYTHON_EXECUTABLE=${PYTHON}
-        export LDSHARED="${CC} -shared"
-        # CMAKE_BUILD_TYPE=Release
-    distutils3_do_configure
-}
-
 do_compile() {
-        export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
         export _GLIBCXX_USE_CXX11_ABI=1
         export NATIVE_BUILD_DIR=${STAGING_DIR_NATIVE}/usr
         export CAFFE2_CUSTOM_PROTOC_EXECUTABLE=${STAGING_DIR_NATIVE}/usr/bin/protoc
         export USE_DISTRIBUTED=OFF
         export USE_XNNPACK=OFF
+        export USE_NUMPY=ON
         export PYTHON_EXECUTABLE=${PYTHON}
-        export CMAKE_BUILD_PARALLEL_LEVEL="2"
+        export CMAKE_SYSTEM_NAME=Linux
+        export CMAKE_BUILD_TYPE=Release
+        export CMAKE_SYSTEM_PROCESSOR=aarch64
+        export NUMPY_INCLUDE_DIR=${PKG_CONFIG_SYSROOT_DIR}/usr/lib/python3.8/site-packages/numpy/core/include
     distutils3_do_compile
 }
