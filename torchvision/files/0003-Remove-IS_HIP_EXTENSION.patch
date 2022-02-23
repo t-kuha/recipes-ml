@@ -1,0 +1,62 @@
+From c8c14a57704bf6322843d3f82a22d6bc9925d4a3 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Wed, 23 Feb 2022 20:07:25 +0900
+Subject: [PATCH 3/4] Remove IS_HIP_EXTENSION
+
+---
+ setup.py | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 70bca9c12..bc0990456 100644
+--- a/setup.py
++++ b/setup.py
+@@ -491,10 +491,7 @@ def _write_ninja_file(path,
+     config = ['ninja_required_version = 1.3']
+     config.append(f'cxx = {compiler}')
+     if with_cuda:
+-        if IS_HIP_EXTENSION:
+-            nvcc = _join_rocm_home('bin', 'hipcc')
+-        else:
+-            nvcc = _join_cuda_home('bin', 'nvcc')
++        nvcc = _join_cuda_home('bin', 'nvcc')
+         config.append(f'nvcc = {nvcc}')
+ 
+     flags = [f'cflags = {" ".join(cflags)}']
+@@ -860,18 +857,14 @@ class BuildExtension(build_ext, object):
+             try:
+                 original_compiler = self.compiler.compiler_so
+                 if _is_cuda_file(src):
+-                    nvcc = [_join_rocm_home('bin', 'hipcc') if IS_HIP_EXTENSION else _join_cuda_home('bin', 'nvcc')]
++                    nvcc = [_join_cuda_home('bin', 'nvcc')]
+                     self.compiler.set_executable('compiler_so', nvcc)
+                     if isinstance(cflags, dict):
+                         cflags = cflags['nvcc']
+-                    if IS_HIP_EXTENSION:
+-                        cflags = COMMON_HIPCC_FLAGS + cflags + _get_rocm_arch_flags(cflags)
+                     else:
+                         cflags = unix_cuda_flags(cflags)
+                 elif isinstance(cflags, dict):
+                     cflags = cflags['cxx']
+-                if IS_HIP_EXTENSION:
+-                    cflags = COMMON_HIP_FLAGS + cflags
+                 append_std14_if_no_std_present(cflags)
+ 
+                 original_compile(obj, src, ext, cc_args, cflags, pp_opts)
+@@ -931,11 +924,8 @@ class BuildExtension(build_ext, object):
+                     cuda_post_cflags = extra_postargs['nvcc']
+                 else:
+                     cuda_post_cflags = list(extra_postargs)
+-                if IS_HIP_EXTENSION:
+-                    cuda_post_cflags = cuda_post_cflags + _get_rocm_arch_flags(cuda_post_cflags)
+-                    cuda_post_cflags = COMMON_HIP_FLAGS + COMMON_HIPCC_FLAGS + cuda_post_cflags
+-                else:
+-                    cuda_post_cflags = unix_cuda_flags(cuda_post_cflags)
++
++                cuda_post_cflags = unix_cuda_flags(cuda_post_cflags)
+                 append_std14_if_no_std_present(cuda_post_cflags)
+                 cuda_cflags = [shlex.quote(f) for f in cuda_cflags]
+                 cuda_post_cflags = [shlex.quote(f) for f in cuda_post_cflags]
+-- 
+2.25.1
+

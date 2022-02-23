@@ -1,0 +1,276 @@
+From 677d5a39d08e649a6c82ff74ab3129493c46501e Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Wed, 9 Feb 2022 00:14:15 +0900
+Subject: [PATCH 1/4] Add support for Yocto build
+
+---
+ setup.py | 187 +++++++++++++++++--------------------------------------
+ 1 file changed, 56 insertions(+), 131 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 4c9e734f3..6bb759556 100644
+--- a/setup.py
++++ b/setup.py
+@@ -2,7 +2,7 @@ import os
+ import io
+ import re
+ import sys
+-from setuptools import setup, find_packages
++from setuptools import setup, find_packages, Extension
+ from pkg_resources import parse_version, get_distribution, DistributionNotFound
+ import subprocess
+ import distutils.command.clean
+@@ -11,8 +11,7 @@ from distutils.version import StrictVersion
+ import glob
+ import shutil
+ 
+-import torch
+-from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDAExtension, CUDA_HOME
++from torch.utils.cpp_extension import BuildExtension
+ 
+ 
+ def read(*names, **kwargs):
+@@ -74,6 +73,45 @@ pillow_req = 'pillow-simd' if get_dist('pillow-simd') is not None else 'pillow'
+ requirements.append(pillow_req + pillow_ver)
+ 
+ 
++_TORCH_PATH = os.path.join(
++    os.environ.get('PKG_CONFIG_SYSROOT_DIR', None),
++    'usr', 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages', 'torch')
++
++def include_paths(cuda=False):
++    lib_include = os.path.join(_TORCH_PATH, 'include')
++    paths = [
++        lib_include,
++        # Remove this once torch/torch.h is officially no longer supported for C++ extensions.
++        os.path.join(lib_include, 'torch', 'csrc', 'api', 'include'),
++    ]
++    return paths
++
++
++def library_paths(cuda=False):
++    paths = [os.path.join(_TORCH_PATH, 'lib')]
++    return paths
++
++
++def CppExtension(name, sources, *args, **kwargs):
++    include_dirs = kwargs.get('include_dirs', [])
++    include_dirs += include_paths()
++    kwargs['include_dirs'] = include_dirs
++
++    library_dirs = kwargs.get('library_dirs', [])
++    library_dirs += library_paths()
++    kwargs['library_dirs'] = library_dirs
++
++    libraries = kwargs.get('libraries', [])
++    libraries.append('c10')
++    libraries.append('torch')
++    libraries.append('torch_cpu')
++    libraries.append('torch_python')
++    kwargs['libraries'] = libraries
++
++    kwargs['language'] = 'c++'
++    return Extension(name, sources, *args, **kwargs)
++
++
+ def find_library(name, vision_include):
+     this_dir = os.path.dirname(os.path.abspath(__file__))
+     build_prefix = os.environ.get('BUILD_PREFIX', None)
+@@ -147,30 +185,6 @@ def get_extensions():
+     )
+ 
+     is_rocm_pytorch = False
+-    TORCH_MAJOR = int(torch.__version__.split('.')[0])
+-    TORCH_MINOR = int(torch.__version__.split('.')[1])
+-    if TORCH_MAJOR > 1 or (TORCH_MAJOR == 1 and TORCH_MINOR >= 5):
+-        from torch.utils.cpp_extension import ROCM_HOME
+-        is_rocm_pytorch = True if ((torch.version.hip is not None) and (ROCM_HOME is not None)) else False
+-
+-    if is_rocm_pytorch:
+-        from torch.utils.hipify import hipify_python
+-        hipify_python.hipify(
+-            project_directory=this_dir,
+-            output_directory=this_dir,
+-            includes="torchvision/csrc/ops/cuda/*",
+-            show_detailed=True,
+-            is_pytorch_extension=True,
+-        )
+-        source_cuda = glob.glob(os.path.join(extensions_dir, 'ops', 'hip', '*.hip'))
+-        # Copy over additional files
+-        for file in glob.glob(r"torchvision/csrc/ops/cuda/*.h"):
+-            shutil.copy(file, "torchvision/csrc/ops/hip")
+-
+-    else:
+-        source_cuda = glob.glob(os.path.join(extensions_dir, 'ops', 'cuda', '*.cu'))
+-
+-    source_cuda += glob.glob(os.path.join(extensions_dir, 'ops', 'autocast', '*.cpp'))
+ 
+     sources = main_file + source_cpu
+     extension = CppExtension
+@@ -190,26 +204,6 @@ def get_extensions():
+     define_macros = []
+ 
+     extra_compile_args = {'cxx': []}
+-    if (torch.cuda.is_available() and ((CUDA_HOME is not None) or is_rocm_pytorch)) \
+-            or os.getenv('FORCE_CUDA', '0') == '1':
+-        extension = CUDAExtension
+-        sources += source_cuda
+-        if not is_rocm_pytorch:
+-            define_macros += [('WITH_CUDA', None)]
+-            nvcc_flags = os.getenv('NVCC_FLAGS', '')
+-            if nvcc_flags == '':
+-                nvcc_flags = []
+-            else:
+-                nvcc_flags = nvcc_flags.split(' ')
+-        else:
+-            define_macros += [('WITH_HIP', None)]
+-            nvcc_flags = []
+-        extra_compile_args["nvcc"] = nvcc_flags
+-
+-    if sys.platform == 'win32':
+-        define_macros += [('torchvision_EXPORTS', None)]
+-
+-        extra_compile_args['cxx'].append('/MP')
+ 
+     debug_mode = os.getenv('DEBUG', '0') == '1'
+     if debug_mode:
+@@ -259,6 +253,8 @@ def get_extensions():
+     include_dirs += vision_include
+     library_dirs = vision_library
+ 
++    library_dirs += [os.path.join(_TORCH_PATH, 'lib')]
++
+     # Image reading extension
+     image_macros = []
+     image_include = [extensions_dir]
+@@ -266,49 +262,18 @@ def get_extensions():
+     image_link_flags = []
+ 
+     # Locating libPNG
+-    libpng = distutils.spawn.find_executable('libpng-config')
+-    pngfix = distutils.spawn.find_executable('pngfix')
+-    png_found = libpng is not None or pngfix is not None
++    png_found = True  # libpng is not None or pngfix is not None
++    png_include = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'include')
++    png_lib = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'lib')
+     print('PNG found: {0}'.format(png_found))
+-    if png_found:
+-        if libpng is not None:
+-            # Linux / Mac
+-            png_version = subprocess.run([libpng, '--version'],
+-                                         stdout=subprocess.PIPE)
+-            png_version = png_version.stdout.strip().decode('utf-8')
+-            print('libpng version: {0}'.format(png_version))
+-            png_version = parse_version(png_version)
+-            if png_version >= parse_version("1.6.0"):
+-                print('Building torchvision with PNG image support')
+-                png_lib = subprocess.run([libpng, '--libdir'],
+-                                         stdout=subprocess.PIPE)
+-                png_lib = png_lib.stdout.strip().decode('utf-8')
+-                if 'disabled' not in png_lib:
+-                    image_library += [png_lib]
+-                png_include = subprocess.run([libpng, '--I_opts'],
+-                                             stdout=subprocess.PIPE)
+-                png_include = png_include.stdout.strip().decode('utf-8')
+-                _, png_include = png_include.split('-I')
+-                print('libpng include path: {0}'.format(png_include))
+-                image_include += [png_include]
+-                image_link_flags.append('png')
+-            else:
+-                print('libpng installed version is less than 1.6.0, '
+-                      'disabling PNG support')
+-                png_found = False
+-        else:
+-            # Windows
+-            png_lib = os.path.join(
+-                os.path.dirname(os.path.dirname(pngfix)), 'lib')
+-            png_include = os.path.join(os.path.dirname(
+-                os.path.dirname(pngfix)), 'include', 'libpng16')
+-            image_library += [png_lib]
+-            image_include += [png_include]
+-            image_link_flags.append('libpng')
++    image_link_flags.append('png')
+ 
+     # Locating libjpeg
+-    (jpeg_found, jpeg_conda,
+-     jpeg_include, jpeg_lib) = find_library('jpeglib', vision_include)
++    jpeg_found = True
++    jpeg_conda = False
++    jpeg_include = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'include')
++    jpeg_lib = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'lib')
++    image_link_flags.append('jpeg')
+ 
+     print('JPEG found: {0}'.format(jpeg_found))
+     image_macros += [('PNG_FOUND', str(int(png_found)))]
+@@ -322,11 +287,7 @@ def get_extensions():
+ 
+     # Locating nvjpeg
+     # Should be included in CUDA_HOME for CUDA >= 10.1, which is the minimum version we have in the CI
+-    nvjpeg_found = (
+-        extension is CUDAExtension and
+-        CUDA_HOME is not None and
+-        os.path.exists(os.path.join(CUDA_HOME, 'include', 'nvjpeg.h'))
+-    )
++    nvjpeg_found = False
+ 
+     print('NVJPEG found: {0}'.format(nvjpeg_found))
+     image_macros += [('NVJPEG_FOUND', str(int(nvjpeg_found)))]
+@@ -349,22 +310,7 @@ def get_extensions():
+             extra_compile_args=extra_compile_args
+         ))
+ 
+-    ffmpeg_exe = distutils.spawn.find_executable('ffmpeg')
+-    has_ffmpeg = ffmpeg_exe is not None
+-    # FIXME: Building torchvision with ffmpeg on MacOS or with Python 3.9
+-    # FIXME: causes crash. See the following GitHub issues for more details.
+-    # FIXME: https://github.com/pytorch/pytorch/issues/65000
+-    # FIXME: https://github.com/pytorch/vision/issues/3367
+-    if sys.platform != 'linux' or (
+-            sys.version_info.major == 3 and sys.version_info.minor == 9):
+-        has_ffmpeg = False
+-    if has_ffmpeg:
+-        try:
+-            # This is to check if ffmpeg is installed properly.
+-            subprocess.check_output(["ffmpeg", "-version"])
+-        except subprocess.CalledProcessError:
+-            print('Error fetching ffmpeg version, ignoring ffmpeg.')
+-            has_ffmpeg = False
++    has_ffmpeg = True
+ 
+     print("FFmpeg found: {}".format(has_ffmpeg))
+ 
+@@ -377,29 +323,8 @@ def get_extensions():
+             'libswscale'
+         }
+ 
+-        ffmpeg_bin = os.path.dirname(ffmpeg_exe)
+-        ffmpeg_root = os.path.dirname(ffmpeg_bin)
+-        ffmpeg_include_dir = os.path.join(ffmpeg_root, 'include')
+-        ffmpeg_library_dir = os.path.join(ffmpeg_root, 'lib')
+-
+-        gcc = distutils.spawn.find_executable('gcc')
+-        platform_tag = subprocess.run(
+-            [gcc, '-print-multiarch'], stdout=subprocess.PIPE)
+-        platform_tag = platform_tag.stdout.strip().decode('utf-8')
+-
+-        if platform_tag:
+-            # Most probably a Debian-based distribution
+-            ffmpeg_include_dir = [
+-                ffmpeg_include_dir,
+-                os.path.join(ffmpeg_include_dir, platform_tag)
+-            ]
+-            ffmpeg_library_dir = [
+-                ffmpeg_library_dir,
+-                os.path.join(ffmpeg_library_dir, platform_tag)
+-            ]
+-        else:
+-            ffmpeg_include_dir = [ffmpeg_include_dir]
+-            ffmpeg_library_dir = [ffmpeg_library_dir]
++        ffmpeg_include_dir = [jpeg_include]
++        ffmpeg_library_dir = [jpeg_lib]
+ 
+         has_ffmpeg = True
+         for library in ffmpeg_libraries:
+-- 
+2.25.1
+
