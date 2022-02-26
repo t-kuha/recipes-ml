@@ -11,13 +11,15 @@ __oneDNN__: oneAPI Deep Neural Network Library (v2.4.4)
 
 __caffe__: Caffe v1.0
 
-__libtorch__: PyTorch C++ API (v1.10.1)
+__libtorch__: PyTorch C++ API (v1.10.2)
 
-__torchvision__: Torch Vision (v0.11.2)
+__pytorch__: PyTorch (v1.10.2)
+
+__torchvision__: Torch Vision (v0.11.3)
 
 __tflite__: TensorFlow Lite (TF v1.15.5)
 
-__tflite2__: TensorFlow Lite (TF v2.7.0)
+__tflite2__: TensorFlow2 Lite (TF v2.7.0)
 
 __larq-compute-engine__: Larq Compute Engine (v0.6.2)
 
