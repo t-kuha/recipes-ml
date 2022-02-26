@@ -19,9 +19,6 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=bd7749a3307486a4d4bfefbc81c8b796"
 SRC_URI = " \
     git://github.com/pytorch/vision.git;protocol=https;nobranch=1;tag=v${PV} \
     file://0001-Add-support-for-Yocto-build.patch \
-    file://0002-Remove-PyTorch-dependency.patch \
-    file://0003-Remove-IS_HIP_EXTENSION.patch \
-    file://0004-Clean-up-code.patch \
 "
 
 RDEPENDS_${PN} += "pytorch jpeg libpng ffmpeg "
