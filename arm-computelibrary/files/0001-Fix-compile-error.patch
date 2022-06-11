@@ -1,0 +1,36 @@
+From 7e68e186ae04e7c3884b25c25898e2bd34dc2943 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 11 Jun 2022 18:22:58 +0900
+Subject: [PATCH] Fix compile error
+
+---
+ SConstruct | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/SConstruct b/SConstruct
+index 13da02628..60be0085f 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -123,7 +123,9 @@ vars.AddVariables(
+     ("extra_link_flags", "Extra LD flags to be appended to the build command", ""),
+     ("compiler_cache", "Command to prefix to the C and C++ compiler (e.g ccache)", ""),
+     ("specs_file", "Specs file to use (e.g. rdimon.specs)", ""),
+-    ("build_config", "Operator/Data-type/Data-layout configuration to use for tailored ComputeLibrary builds. Can be a JSON file or a JSON formatted string", "")
++    ("build_config", "Operator/Data-type/Data-layout configuration to use for tailored ComputeLibrary builds. Can be a JSON file or a JSON formatted string", ""),
++    ("PREFIX", "dummy"),
++    ("prefix", "dummy")
+ )
+ 
+ 
+@@ -285,7 +287,7 @@ if env['multi_isa']:
+ else: # NONE "multi_isa" builds
+ 
+     if 'v7a' in env['arch']:
+-        env.Append(CXXFLAGS = ['-march=armv7-a', '-mthumb', '-mfpu=neon'])
++        env.Append(CXXFLAGS = ['-mthumb', '-mfpu=neon'])
+         if (env['os'] == 'android' or env['os'] == 'tizen') and not 'hf' in env['arch']:
+             env.Append(CXXFLAGS = ['-mfloat-abi=softfp'])
+         else:
+-- 
+2.25.1
+
