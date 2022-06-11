@@ -22,7 +22,8 @@ SRC_URI = "\
     file://0004-Remove-Python-from-build-target.patch \
     file://0005-Remove-snappy.patch \
     file://0006-Disable-hdf5.patch \
-    file://0007-Update-for-OpenCV-4-and-protobuf.patch \
+    file://0007-Update-for-OpenCV-4.patch \
+    file://0008-Update-for-newer-Protobuf.patch \
 "
 
 S = "${WORKDIR}/git"
