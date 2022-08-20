@@ -6,7 +6,7 @@ SUMMARY = "oneDNN"
 DESCRIPTION = "oneAPI Deep Neural Network Library (oneDNN)"
 
 # oneDNN version to use
-PV = "2.6"
+PV = "2.6.1"
 PR = "r0"
 
 LICENSE = "Apache-2.0"
