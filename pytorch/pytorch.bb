@@ -20,8 +20,6 @@ SRC_URI = " \
     gitsm://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
     file://0001-Pass-env.-var.-to-CMake.patch \
 "
-# file://0001-Fix-compile-error.patch 
-# file://0002-Pass-env.-var.-to-CMake.patch 
 
 RDEPENDS:${PN} += "protobuf gflags glog python3-numpy "
 DEPENDS += " \
@@ -55,8 +53,6 @@ do_compile() {
     export CMAKE_BUILD_TYPE=Release
     export CMAKE_SYSTEM_PROCESSOR=aarch64
     export NUMPY_INCLUDE_DIR=${PKG_CONFIG_SYSROOT_DIR}/usr/lib/python3.9/site-packages/numpy/core/include
-    # export CMAKE_CROSSCOMPILING=TRUE
-    # export Protobuf_DIR=${STAGING_DIR_TARGET}
     export CMAKE_PREFIX_PATH=${STAGING_DIR_TARGET}/usr
     distutils3_do_compile
 }
