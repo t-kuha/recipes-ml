@@ -1,0 +1,91 @@
+From 7317bfd89da45cdec1016ee4da2c85c75cbb17d4 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 24 Sep 2022 13:58:36 +0000
+Subject: [PATCH] Pass env. var. to CMake
+
+---
+ setup.py                     |  8 +++++---
+ tools/setup_helpers/cmake.py | 12 +++++-------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 4223cc92051..2d434cad43e 100644
+--- a/setup.py
++++ b/setup.py
+@@ -303,7 +303,7 @@ else:
+     cmake_python_library = "{}/{}".format(
+         sysconfig.get_config_var("LIBDIR"),
+         sysconfig.get_config_var("INSTSONAME"))
+-cmake_python_include_dir = sysconfig.get_path("include")
++cmake_python_include_dir = os.environ['PYTHON_INCLUDE_DIR']
+ 
+ 
+ ################################################################################
+@@ -849,7 +849,7 @@ def configure_extension_build():
+                   sources=main_sources,
+                   language='c',
+                   extra_compile_args=main_compile_args + extra_compile_args,
+-                  include_dirs=[],
++                  include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
+                   library_dirs=library_dirs,
+                   extra_link_args=extra_link_args + main_link_args + make_relative_rpath_args('lib'))
+     C_flatbuffer = Extension("torch._C_flatbuffer",
+@@ -866,7 +866,9 @@ def configure_extension_build():
+     if not IS_WINDOWS:
+         DL = Extension("torch._dl",
+                        sources=["torch/csrc/dl.c"],
+-                       language='c')
++                       language='c',
++                       include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
++                       library_dirs=library_dirs,)
+         extensions.append(DL)
+ 
+     # These extensions are built by cmake and copied manually in build_extensions()
+diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
+index 21943619329..8d8ec445831 100644
+--- a/tools/setup_helpers/cmake.py
++++ b/tools/setup_helpers/cmake.py
+@@ -13,7 +13,6 @@ from typing import IO, Any, Dict, List, Optional, Union, cast
+ 
+ from . import which
+ from .env import BUILD_DIR, IS_64BIT, IS_DARWIN, IS_WINDOWS, check_negative_env_flag
+-from .numpy_ import USE_NUMPY, NUMPY_INCLUDE_DIR
+ 
+ 
+ def _mkdir_p(d: str) -> None:
+@@ -306,6 +305,8 @@ class CMake:
+                     "WERROR",
+                     "OPENSSL_ROOT_DIR",
+                     "STATIC_DISPATCH_BACKEND",
++                    'NATIVE_BUILD_DIR',
++                    'CAFFE2_CUSTOM_PROTOC_EXECUTABLE',
+                 )
+             }
+         )
+@@ -358,9 +359,6 @@ class CMake:
+                 # are automatically passed to CMake; For other options you can add to additional_options above.
+                 "BUILD_PYTHON": build_python,
+                 "BUILD_TEST": build_test,
+-                # Most library detection should go to CMake script, except this one, which Python can do a much better job
+-                # due to NumPy's inherent Pythonic nature.
+-                "USE_NUMPY": USE_NUMPY,
+             }
+         )
+ 
+@@ -383,10 +381,10 @@ class CMake:
+         CMake.defines(
+             args,
+             PYTHON_EXECUTABLE=sys.executable,
+-            PYTHON_LIBRARY=cmake_python_library,
+-            PYTHON_INCLUDE_DIR=sysconfig.get_path("include"),
++            PYTHON_LIBRARY=os.environ['PYTHON_LIBRARY'],
++            PYTHON_INCLUDE_DIR=os.environ['PYTHON_INCLUDE_DIR'],
+             TORCH_BUILD_VERSION=version,
+-            NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
++            NUMPY_INCLUDE_DIR=os.environ['NUMPY_INCLUDE_DIR'],
+             **build_options,
+         )
+ 
+-- 
+2.25.1
+
