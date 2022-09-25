@@ -33,7 +33,7 @@ inherit cmake
 
 EXTRA_OECMAKE = "\
     -DUSE_LIBBACKTRACE=OFF \
-    -DCMAKE_BUILD_TYPE=Reelase \
+    -DCMAKE_BUILD_TYPE=Release \
 "
 
 do_configure:prepend(){
@@ -41,4 +41,5 @@ do_configure:prepend(){
     echo set\(USE_VITIS_AI ON\) >> ${S}/config.cmake
 }
 
-INSANE_SKIP:${PN}-dev += "dev-elf "
+SOLIBS = ".so"
+FILES_SOLIBSDEV = ""
