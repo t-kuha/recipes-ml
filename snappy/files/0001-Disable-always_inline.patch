@@ -1,0 +1,36 @@
+From 4b8e5dc549e3a15e17fbcd8d4362b241b1976ed4 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sun, 20 Nov 2022 05:53:23 +0000
+Subject: [PATCH] Disable always_inline
+
+---
+ CMakeLists.txt | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 672561e..1b6814d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -153,12 +153,14 @@ int main() {
+   return __builtin_ctzll(0);
+ }" HAVE_BUILTIN_CTZ)
+ 
+-check_cxx_source_compiles("
+-__attribute__((always_inline)) int zero() { return 0; }
++#check_cxx_source_compiles("
++#__attribute__((always_inline)) int zero() { return 0; }
++#
++#int main() {
++#  return zero();
++#}" HAVE_ATTRIBUTE_ALWAYS_INLINE)
+ 
+-int main() {
+-  return zero();
+-}" HAVE_ATTRIBUTE_ALWAYS_INLINE)
++set(HAVE_ATTRIBUTE_ALWAYS_INLINE 0)
+ 
+ check_cxx_source_compiles("
+ #include <tmmintrin.h>
+-- 
+2.25.1
+
