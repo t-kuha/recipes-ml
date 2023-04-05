@@ -55,5 +55,6 @@ do_compile() {
     export CMAKE_SYSTEM_PROCESSOR=aarch64
     export NUMPY_INCLUDE_DIR=${PKG_CONFIG_SYSROOT_DIR}/usr/lib/python3.9/site-packages/numpy/core/include
     export CMAKE_PREFIX_PATH=${STAGING_DIR_TARGET}/usr
+    export CAFFE2_CPU_FLAGS="-mfpu=neon -mfloat-abi=hard"
     distutils3_do_compile
 }
