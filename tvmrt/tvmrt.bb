@@ -6,7 +6,7 @@ SUMMARY = "TVM runtime"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "0.10.0"
+PV = "0.11.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -14,7 +14,7 @@ S = "${WORKDIR}/git"
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 LICENSE = "Apache-2.0"
 
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=f30f7a1bcf7728eb568504d96cee7b09"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=6ec4db95cc43836f5e2ff1d6edaa2284"
 
 SRC_URI = " \
     gitsm://github.com/apache/tvm;protocol=https;nobranch=1;tag=v${PV} \

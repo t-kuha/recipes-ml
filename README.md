@@ -21,7 +21,7 @@ __tflite2__: TensorFlow2 Lite (TF v2.7.3)
 
 __TorchVision__: TorchVision (v0.14.1)
 
-__TVM__: Apache TVM (v0.10.0)
+__TVM__: Apache TVM (v0.11.1)
 
 ***
 
