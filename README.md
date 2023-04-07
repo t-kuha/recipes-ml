@@ -6,10 +6,12 @@ __arm-computelibrary__: ARM ComputeLibrary (v22.08)
 
 __armnn__: Arm NN ML Software (v22.08)
 
+__caffe__: Caffe v1.0
+
 __oneDNN__: oneAPI Deep Neural Network Library (v2.7.2)
   - Note: MPSoC (64-bit processor) only
 
-__caffe__: Caffe v1.0
+__PyTorch__: PyTorch (v1.13.1)
 
 __PyXIR__: Xilinx PyXIR (v0.3.5)
 
