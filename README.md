@@ -2,7 +2,7 @@
 
 - Yocto recipes for machine learning libraries
 
-__arm-computelibrary__: ARM ComputeLibrary (v22.08)
+__arm-computelibrary__: ARM ComputeLibrary (v23.02.1)
 
 __armnn__: Arm NN ML Software (v22.08)
 
