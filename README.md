@@ -4,7 +4,7 @@
 
 __arm-computelibrary__: ARM ComputeLibrary (v23.02.1)
 
-__armnn__: Arm NN ML Software (v22.08)
+__armnn__: Arm NN ML Software (v23.02)
 
 __caffe__: Caffe v1.0
 
@@ -18,6 +18,8 @@ __PyXIR__: Xilinx PyXIR (v0.3.5)
 __tflite__: TensorFlow Lite (TF v1.15.5)
 
 __tflite2__: TensorFlow2 Lite (TF v2.7.3)
+
+__TorchVision__: TorchVision (v0.14.1)
 
 __TVM__: Apache TVM (v0.10.0)
 

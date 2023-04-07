@@ -6,7 +6,7 @@ SUMMARY = "torchvision"
 DESCRIPTION = "Datasets, Transforms and Models specific to Computer Vision"
 
 # Version to use
-PV = "0.14.0"
+PV = "0.14.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
