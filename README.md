@@ -8,7 +8,7 @@ __armnn__: Arm NN ML Software (v23.02)
 
 __caffe__: Caffe v1.0
 
-__oneDNN__: oneAPI Deep Neural Network Library (v2.7.2)
+__oneDNN__: oneAPI Deep Neural Network Library (v3.1)
   - Note: MPSoC (64-bit processor) only
 
 __PyTorch__: PyTorch (v1.13.1)
