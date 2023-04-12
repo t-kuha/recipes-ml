@@ -6,7 +6,7 @@ SUMMARY = "PyTorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-PV = "2.0.0"
+PV = "1.13.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -16,9 +16,8 @@ LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=5c853508d63a8090fa952ff1af58217d"
 
-# with "gitsm", do_fetch() takes forever
 SRC_URI = " \
-    git://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
+    gitsm://github.com/pytorch/pytorch.git;protocol=https;nobranch=1;tag=v${PV} \
     file://0001-Add-support-for-Yocto-build.patch \
     file://0002-Quick-fix-for-Yocto-build.patch \
 "
@@ -37,11 +36,6 @@ DEPENDS += " \
 inherit cmake setuptools3
 
 do_configure:prepend(){
-    # alternative to "gitsm"
-    cd ${S}
-    git submodule sync
-    git submodule update --init --recursive --jobs=$(nproc)
-
     # install required modules
     pip3 install pyyaml typing_extensions opt-einsum
 }
