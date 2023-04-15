@@ -1,17 +1,17 @@
-From 314ec9542533d350ef4ae936266d27a325614a0a Mon Sep 17 00:00:00 2001
+From 4afcdce3daf2783c6587d1eed094129b1adc68bc Mon Sep 17 00:00:00 2001
 From: t-kuha <imagingtechnerd@gmail.com>
-Date: Sat, 26 Nov 2022 09:02:54 +0000
+Date: Sat, 15 Apr 2023 02:53:04 +0000
 Subject: [PATCH] Add support for Yocto build
 
 ---
- setup.py | 645 ++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 496 insertions(+), 149 deletions(-)
+ setup.py | 700 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 497 insertions(+), 203 deletions(-)
 
 diff --git a/setup.py b/setup.py
-index 951989050b..14d0334ceb 100644
+index 24b7a2edb9..f09d8f4798 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -5,13 +5,495 @@ import os
+@@ -5,11 +5,495 @@ import os
  import shutil
  import subprocess
  import sys
@@ -26,11 +26,12 @@ index 951989050b..14d0334ceb 100644
 -from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDA_HOME, CUDAExtension
 +from setuptools import find_packages, setup, Extension
 +from setuptools.command.build_ext import build_ext
- 
- 
++
++
 +_TORCH_PATH = os.path.join(
 +    os.environ.get('PKG_CONFIG_SYSROOT_DIR', None),
 +    'usr', 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages', 'torch')
++
 +
 +def include_paths(cuda=False):
 +    lib_include = os.path.join(_TORCH_PATH, 'include')
@@ -506,11 +507,10 @@ index 951989050b..14d0334ceb 100644
 +    def _add_gnu_cpp_abi_flag(self, extension):
 +        # use the same CXX ABI as what PyTorch was compiled with
 +        self._add_compile_flag(extension, '-D_GLIBCXX_USE_CXX11_ABI=' + str(int(True)))
-+
+ 
+ 
  def read(*names, **kwargs):
-     with open(os.path.join(os.path.dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")) as fp:
-         return fp.read()
-@@ -65,7 +547,7 @@ requirements = [
+@@ -64,7 +548,7 @@ requirements = [
  ]
  
  # Excluding 8.3.* because of https://github.com/pytorch/vision/issues/4934
@@ -519,21 +519,21 @@ index 951989050b..14d0334ceb 100644
  pillow_req = "pillow-simd" if get_dist("pillow-simd") is not None else "pillow"
  requirements.append(pillow_req + pillow_ver)
  
-@@ -148,11 +630,11 @@ def get_extensions():
+@@ -147,11 +631,11 @@ def get_extensions():
      print(f"  TORCHVISION_USE_PNG: {use_png}")
      use_jpeg = os.getenv("TORCHVISION_USE_JPEG", "1") == "1"
      print(f"  TORCHVISION_USE_JPEG: {use_jpeg}")
 -    use_nvjpeg = os.getenv("TORCHVISION_USE_NVJPEG", "1") == "1"
-+    use_nvjpeg = os.getenv("TORCHVISION_USE_NVJPEG", "0") == "1"
++    use_nvjpeg = False
      print(f"  TORCHVISION_USE_NVJPEG: {use_nvjpeg}")
      use_ffmpeg = os.getenv("TORCHVISION_USE_FFMPEG", "1") == "1"
      print(f"  TORCHVISION_USE_FFMPEG: {use_ffmpeg}")
 -    use_video_codec = os.getenv("TORCHVISION_USE_VIDEO_CODEC", "1") == "1"
-+    use_video_codec = os.getenv("TORCHVISION_USE_VIDEO_CODEC", "0") == "1"
++    use_video_codec = False
      print(f"  TORCHVISION_USE_VIDEO_CODEC: {use_video_codec}")
  
      nvcc_flags = os.getenv("NVCC_FLAGS", "")
-@@ -160,29 +642,7 @@ def get_extensions():
+@@ -159,29 +643,7 @@ def get_extensions():
  
      is_rocm_pytorch = False
  
@@ -564,7 +564,7 @@ index 951989050b..14d0334ceb 100644
  
      sources = main_file + source_cpu
      extension = CppExtension
-@@ -190,19 +650,6 @@ def get_extensions():
+@@ -189,19 +651,6 @@ def get_extensions():
      define_macros = []
  
      extra_compile_args = {"cxx": []}
@@ -584,7 +584,7 @@ index 951989050b..14d0334ceb 100644
  
      if sys.platform == "win32":
          define_macros += [("torchvision_EXPORTS", None)]
-@@ -252,70 +699,25 @@ def get_extensions():
+@@ -251,70 +700,23 @@ def get_extensions():
          image_macros += [("USE_PYTHON", None)]
  
      # Locating libPNG
@@ -646,8 +646,8 @@ index 951989050b..14d0334ceb 100644
          print("Building torchvision without JPEG image support")
      image_macros += [("JPEG_FOUND", str(int(use_jpeg)))]
  
-     # Locating nvjpeg
-     # Should be included in CUDA_HOME for CUDA >= 10.1, which is the minimum version we have in the CI
+-    # Locating nvjpeg
+-    # Should be included in CUDA_HOME for CUDA >= 10.1, which is the minimum version we have in the CI
 -    nvjpeg_found = (
 -        extension is CUDAExtension
 -        and CUDA_HOME is not None
@@ -658,7 +658,7 @@ index 951989050b..14d0334ceb 100644
      if use_nvjpeg:
          print("Building torchvision with NVJPEG image support")
          image_link_flags.append("nvjpeg")
-@@ -344,62 +746,16 @@ def get_extensions():
+@@ -343,62 +745,14 @@ def get_extensions():
          )
  
      # Locating ffmpeg
@@ -693,8 +693,7 @@ index 951989050b..14d0334ceb 100644
 -        gcc = os.environ.get("CC", shutil.which("gcc"))
 -        platform_tag = subprocess.run([gcc, "-print-multiarch"], stdout=subprocess.PIPE)
 -        platform_tag = platform_tag.stdout.strip().decode("utf-8")
-+        # ffmpeg_libraries = {"libavcodec", "libavformat", "libavutil", "libswresample", "libswscale"}
- 
+-
 -        if platform_tag:
 -            # Most probably a Debian-based distribution
 -            ffmpeg_include_dir = [ffmpeg_include_dir, os.path.join(ffmpeg_include_dir, platform_tag)]
@@ -724,10 +723,14 @@ index 951989050b..14d0334ceb 100644
          print(f"  ffmpeg include path: {ffmpeg_include_dir}")
          print(f"  ffmpeg library_dir: {ffmpeg_library_dir}")
  
-@@ -445,15 +801,6 @@ def get_extensions():
-     # CUDA_HOME should be set to the cuda root directory.
-     # TORCHVISION_INCLUDE and TORCHVISION_LIBRARY should include the location to
-     # video codec header files and libraries respectively.
+@@ -440,66 +794,6 @@ def get_extensions():
+             )
+         )
+ 
+-    # Locating video codec
+-    # CUDA_HOME should be set to the cuda root directory.
+-    # TORCHVISION_INCLUDE and TORCHVISION_LIBRARY should include the location to
+-    # video codec header files and libraries respectively.
 -    video_codec_found = (
 -        extension is CUDAExtension
 -        and CUDA_HOME is not None
@@ -737,12 +740,59 @@ index 951989050b..14d0334ceb 100644
 -    )
 -
 -    use_video_codec = use_video_codec and video_codec_found
-     if (
-         use_video_codec
-         and use_ffmpeg
-@@ -548,7 +895,7 @@ if __name__ == "__main__":
+-    if (
+-        use_video_codec
+-        and use_ffmpeg
+-        and any([os.path.exists(os.path.join(folder, "libavcodec", "bsf.h")) for folder in ffmpeg_include_dir])
+-    ):
+-        print("Building torchvision with video codec support")
+-        gpu_decoder_path = os.path.join(extensions_dir, "io", "decoder", "gpu")
+-        gpu_decoder_src = glob.glob(os.path.join(gpu_decoder_path, "*.cpp"))
+-        cuda_libs = os.path.join(CUDA_HOME, "lib64")
+-        cuda_inc = os.path.join(CUDA_HOME, "include")
+-
+-        ext_modules.append(
+-            extension(
+-                "torchvision.Decoder",
+-                gpu_decoder_src,
+-                include_dirs=include_dirs + [gpu_decoder_path] + [cuda_inc] + ffmpeg_include_dir,
+-                library_dirs=ffmpeg_library_dir + library_dirs + [cuda_libs],
+-                libraries=[
+-                    "avcodec",
+-                    "avformat",
+-                    "avutil",
+-                    "swresample",
+-                    "swscale",
+-                    "nvcuvid",
+-                    "cuda",
+-                    "cudart",
+-                    "z",
+-                    "pthread",
+-                    "dl",
+-                    "nppicc",
+-                ],
+-                extra_compile_args=extra_compile_args,
+-            )
+-        )
+-    else:
+-        print("Building torchvision without video codec support")
+-        if (
+-            use_video_codec
+-            and use_ffmpeg
+-            and not any([os.path.exists(os.path.join(folder, "libavcodec", "bsf.h")) for folder in ffmpeg_include_dir])
+-        ):
+-            print(
+-                "  The installed version of ffmpeg is missing the header file 'bsf.h' which is "
+-                "  required for GPU video decoding. Please install the latest ffmpeg from conda-forge channel:"
+-                "   `conda install -c conda-forge ffmpeg`."
+-            )
+-
+     return ext_modules
+ 
+ 
+@@ -547,7 +841,7 @@ if __name__ == "__main__":
          ext_modules=get_extensions(),
-         python_requires=">=3.7",
+         python_requires=">=3.8",
          cmdclass={
 -            "build_ext": BuildExtension.with_options(no_python_abi_suffix=True),
 +            "build_ext": BuildExtension,
