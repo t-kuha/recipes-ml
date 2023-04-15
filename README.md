@@ -25,8 +25,6 @@ __TVM__: Apache TVM (v0.11.1)
 
 ***
 
-## Some notes on compiling libtorch
+## Some notes on compiling PyTorch
 
-- Ample amount of RAM will be necessary (preferably >= 16GB)
-
-- yaml (pyyaml), dataclasses, and typing_extensions packages are necessary for configuration
+- Ample amount of RAM will be necessary (preferably >= 32GB)
