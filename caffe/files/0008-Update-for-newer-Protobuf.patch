@@ -1,0 +1,25 @@
+From 05be98f498b3682a9c24ccd933d78cd5983bd1d2 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 11 Jun 2022 17:49:34 +0900
+Subject: [PATCH] Update for newer Protobuf
+
+---
+ src/caffe/util/io.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/caffe/util/io.cpp b/src/caffe/util/io.cpp
+index 941fd3879..7b208e733 100644
+--- a/src/caffe/util/io.cpp
++++ b/src/caffe/util/io.cpp
+@@ -54,7 +54,7 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
+   CHECK_NE(fd, -1) << "File not found: " << filename;
+   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+   CodedInputStream* coded_input = new CodedInputStream(raw_input);
+-  coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
++  coded_input->SetTotalBytesLimit(kProtoReadBytesLimit);
+ 
+   bool success = proto->ParseFromCodedStream(coded_input);
+ 
+-- 
+2.25.1
+
