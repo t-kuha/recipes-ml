@@ -9,7 +9,7 @@ COMPATIBLE_MACHINE = "armv7a|aarch64"
 
 # Version to use
 SRCREV = "d8bf9b53752a4f573120cf51b31055de8b3c7d29"
-PV = "23.02.1"
+PV = "23.08"
 PR = "r0"
 
 S = "${WORKDIR}/git"
