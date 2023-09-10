@@ -1,0 +1,36 @@
+From bca8669948e302eb7f457bfb390f3544efdcde48 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sun, 12 Dec 2021 09:03:57 +0000
+Subject: [PATCH] Add support for cross compilation in Yocto
+
+---
+ CMakeLists.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 256ebcf..84d06fd 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -48,7 +48,7 @@ if (USE_VAI_RT_DPUCADX8G)
+   list(REMOVE_ITEM SOURCES ${vitisai_default_SOURCES})
+ 
+ elseif (USE_VAI_RT_DPUCAHX8H OR USE_VART_CLOUD_DPU OR USE_VART_EDGE_DPU OR (USE_VAI_RT_DPUCZDX8G AND USE_DPUCZDX8G_VART))
+-  set(vitisai_LIBRARIES /usr/lib)
++  set(vitisai_LIBRARIES $ENV{PKG_CONFIG_SYSROOT_DIR}/usr/lib)
+   set(VITISAI_SHARED_LIB libvart-runner.so)  
+   add_library(vitisai_rt SHARED IMPORTED)
+   set_property(TARGET vitisai_rt PROPERTY IMPORTED_LOCATION ${vitisai_LIBRARIES}/${VITISAI_SHARED_LIB})
+@@ -69,8 +69,8 @@ elseif (USE_VAI_RT_DPUCAHX8H OR USE_VART_CLOUD_DPU OR USE_VART_EDGE_DPU OR (USE_
+   list(REMOVE_ITEM SOURCES ${vitisai_default_SOURCES})
+ 
+ elseif (USE_VAI_RT_DPUCZDX8G)
+-  set(vitisai_INCLUDE_DIRS /usr/include/vai)
+-  set(vitisai_LIBRARIES /usr/lib)
++  set(vitisai_INCLUDE_DIRS $ENV{PKG_CONFIG_SYSROOT_DIR}/usr/include/vai)
++  set(vitisai_LIBRARIES $ENV{PKG_CONFIG_SYSROOT_DIR}/usr/lib)
+   set(VITISAI_SHARED_LIB libn2cube.so)
+   include_directories(${vitisai_INCLUDE_DIRS})
+   add_library(vitisai_rt SHARED IMPORTED)
+-- 
+2.25.1
+
