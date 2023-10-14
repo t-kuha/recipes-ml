@@ -1,0 +1,25 @@
+From e4fcf03ed3d94a2d31dbd56363f710997ff9ab6f Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 14 Oct 2023 17:51:04 +0900
+Subject: [PATCH] Fix build error
+
+---
+ cmake/public/protobuf.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/public/protobuf.cmake b/cmake/public/protobuf.cmake
+index 77ec3622b13..683dc07c483 100644
+--- a/cmake/public/protobuf.cmake
++++ b/cmake/public/protobuf.cmake
+@@ -1,7 +1,7 @@
+ # ---[ Protobuf
+ 
+ # We will try to use the config mode first, and then manual find.
+-find_package(Protobuf CONFIG QUIET)
++find_package(Protobuf QUIET)
+ if(NOT Protobuf_FOUND)
+   find_package(Protobuf MODULE QUIET)
+ endif()
+-- 
+2.34.1
+

@@ -1,0 +1,112 @@
+From da971b2e39aa83154b16474b389091c4fb68023d Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 14 Oct 2023 13:20:43 +0000
+Subject: [PATCH] Add support for Yocto build
+
+---
+ CMakeLists.txt               |  6 +++---
+ cmake/public/protobuf.cmake  |  2 +-
+ setup.py                     |  4 ++--
+ tools/setup_helpers/cmake.py | 12 +++++-------
+ 4 files changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3a48eaf4e29..2a34e8f2057 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -883,9 +883,9 @@ if(NOT MSVC)
+   append_cxx_flag_if_supported("-Wno-error=inconsistent-missing-override" CMAKE_CXX_FLAGS)
+   append_cxx_flag_if_supported("-Wno-error=inconsistent-missing-destructor-override" CMAKE_CXX_FLAGS)
+   append_cxx_flag_if_supported("-Wconstant-conversion" CMAKE_CXX_FLAGS)
+-  append_cxx_flag_if_supported("-Wno-invalid-partial-specialization" CMAKE_CXX_FLAGS)
+-  append_cxx_flag_if_supported("-Wno-unused-private-field" CMAKE_CXX_FLAGS)
+-  append_cxx_flag_if_supported("-Wno-aligned-allocation-unavailable" CMAKE_CXX_FLAGS)
++  # append_cxx_flag_if_supported("-Wno-invalid-partial-specialization" CMAKE_CXX_FLAGS)
++  # append_cxx_flag_if_supported("-Wno-unused-private-field" CMAKE_CXX_FLAGS)
++  # append_cxx_flag_if_supported("-Wno-aligned-allocation-unavailable" CMAKE_CXX_FLAGS)
+   append_cxx_flag_if_supported("-Wno-missing-braces" CMAKE_CXX_FLAGS)
+   append_cxx_flag_if_supported("-Wunused-lambda-capture" CMAKE_CXX_FLAGS)
+   append_cxx_flag_if_supported("-Qunused-arguments" CMAKE_CXX_FLAGS)
+diff --git a/cmake/public/protobuf.cmake b/cmake/public/protobuf.cmake
+index 77ec3622b13..683dc07c483 100644
+--- a/cmake/public/protobuf.cmake
++++ b/cmake/public/protobuf.cmake
+@@ -1,7 +1,7 @@
+ # ---[ Protobuf
+ 
+ # We will try to use the config mode first, and then manual find.
+-find_package(Protobuf CONFIG QUIET)
++find_package(Protobuf QUIET)
+ if(NOT Protobuf_FOUND)
+   find_package(Protobuf MODULE QUIET)
+ endif()
+diff --git a/setup.py b/setup.py
+index 17bf16b89a7..00cbae8f0f5 100644
+--- a/setup.py
++++ b/setup.py
+@@ -325,7 +325,7 @@ else:
+     cmake_python_library = "{}/{}".format(
+         sysconfig.get_config_var("LIBDIR"), sysconfig.get_config_var("INSTSONAME")
+     )
+-cmake_python_include_dir = sysconfig.get_path("include")
++cmake_python_include_dir = os.environ['PYTHON_INCLUDE_DIR']
+ 
+ 
+ ################################################################################
+@@ -1019,7 +1019,7 @@ def configure_extension_build():
+         sources=main_sources,
+         language="c",
+         extra_compile_args=main_compile_args + extra_compile_args,
+-        include_dirs=[],
++        include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
+         library_dirs=library_dirs,
+         extra_link_args=extra_link_args
+         + main_link_args
+diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
+index fb19b66dfba..0cc28d8a55b 100644
+--- a/tools/setup_helpers/cmake.py
++++ b/tools/setup_helpers/cmake.py
+@@ -13,7 +13,6 @@ from typing import Any, cast, Dict, List, Optional
+ from . import which
+ from .cmake_utils import CMakeValue, get_cmake_cache_variables_from_file
+ from .env import BUILD_DIR, check_negative_env_flag, IS_64BIT, IS_DARWIN, IS_WINDOWS
+-from .numpy_ import NUMPY_INCLUDE_DIR, USE_NUMPY
+ 
+ 
+ def _mkdir_p(d: str) -> None:
+@@ -231,6 +230,8 @@ class CMake:
+                     "SELECTED_OP_LIST",
+                     "TORCH_CUDA_ARCH_LIST",
+                     "TRACING_BASED",
++                    'NATIVE_BUILD_DIR',
++                    'CAFFE2_CUSTOM_PROTOC_EXECUTABLE',
+                 )
+             }
+         )
+@@ -283,9 +284,6 @@ class CMake:
+                 # are automatically passed to CMake; For other options you can add to additional_options above.
+                 "BUILD_PYTHON": build_python,
+                 "BUILD_TEST": build_test,
+-                # Most library detection should go to CMake script, except this one, which Python can do a much better job
+-                # due to NumPy's inherent Pythonic nature.
+-                "USE_NUMPY": USE_NUMPY,
+             }
+         )
+ 
+@@ -308,10 +306,10 @@ class CMake:
+         CMake.defines(
+             args,
+             PYTHON_EXECUTABLE=sys.executable,
+-            PYTHON_LIBRARY=cmake_python_library,
+-            PYTHON_INCLUDE_DIR=sysconfig.get_path("include"),
++            PYTHON_LIBRARY=os.environ['PYTHON_LIBRARY'],
++            PYTHON_INCLUDE_DIR=os.environ['PYTHON_INCLUDE_DIR'],
+             TORCH_BUILD_VERSION=version,
+-            NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
++            NUMPY_INCLUDE_DIR=os.environ['NUMPY_INCLUDE_DIR'],
+             **build_options,
+         )
+ 
+-- 
+2.34.1
+
