@@ -14,7 +14,7 @@ S = "${WORKDIR}/git/tensorflow/lite"
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE;md5=c7e17cca1ef4230861fb7868e96c387e"
+LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE;md5=4158a261ca7f2525513e31ba9c50ae98"
 
 SRC_URI = "\
     git://github.com/tensorflow/tensorflow.git;protocol=https;branch=r2.14 \
