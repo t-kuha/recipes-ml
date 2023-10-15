@@ -1,0 +1,790 @@
+From 3abf113f2610e508a366e0599cfb6e5da6738909 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sun, 15 Oct 2023 10:00:01 +0000
+Subject: [PATCH] Add support for Yocto build
+
+---
+ setup.py | 698 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 495 insertions(+), 203 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index ce67413f41..01c488f676 100644
+--- a/setup.py
++++ b/setup.py
+@@ -5,11 +5,495 @@ import os
+ import shutil
+ import subprocess
+ import sys
++import copy
++import shlex
++import warnings
+ 
+-import torch
++from typing import List
+ from pkg_resources import DistributionNotFound, get_distribution, parse_version
+-from setuptools import find_packages, setup
+-from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDA_HOME, CUDAExtension
++from setuptools import find_packages, setup, Extension
++from setuptools.command.build_ext import build_ext
++
++
++_TORCH_PATH = os.path.join(
++    os.environ.get('PKG_CONFIG_SYSROOT_DIR', None),
++    'usr', 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages', 'torch')
++
++
++def include_paths(cuda=False):
++    lib_include = os.path.join(_TORCH_PATH, 'include')
++    paths = [
++        lib_include,
++        # Remove this once torch/torch.h is officially no longer supported for C++ extensions.
++        os.path.join(lib_include, 'torch', 'csrc', 'api', 'include'),
++        os.path.join(os.environ.get('PKG_CONFIG_SYSROOT_DIR', None), 'usr', 'include', f'python{sys.version_info.major}.{sys.version_info.minor}')
++    ]
++    return paths
++
++
++def library_paths(cuda=False):
++    paths = [os.path.join(_TORCH_PATH, 'lib')]
++    return paths
++
++
++def CppExtension(name, sources, *args, **kwargs):
++    include_dirs = kwargs.get('include_dirs', [])
++    include_dirs += include_paths()
++
++    kwargs['include_dirs'] = include_dirs
++
++    library_dirs = kwargs.get('library_dirs', [])
++    library_dirs += library_paths()
++    kwargs['library_dirs'] = library_dirs
++
++    libraries = kwargs.get('libraries', [])
++    libraries.append('c10')
++    libraries.append('torch')
++    libraries.append('torch_cpu')
++    libraries.append('torch_python')
++    kwargs['libraries'] = libraries
++
++    kwargs['language'] = 'c++'
++    return Extension(name, sources, *args, **kwargs)
++
++
++SUBPROCESS_DECODE_ARGS = ()
++MINIMUM_GCC_VERSION = (5, 0, 0)
++
++
++def is_ninja_available():
++    try:
++        subprocess.check_output('ninja --version'.split())
++    except Exception:
++        return False
++    else:
++        return True
++
++
++def _get_num_workers(verbose: bool):
++    max_jobs = os.environ.get('MAX_JOBS')
++    if max_jobs is not None and max_jobs.isdigit():
++        if verbose:
++            print(f'Using envvar MAX_JOBS ({max_jobs}) as the number of workers...')
++        return int(max_jobs)
++    if verbose:
++        print('Allowing ninja to set a default number of workers... '
++              '(overridable by setting the environment variable MAX_JOBS=N)')
++    return None
++
++
++def _is_cuda_file(path: str) -> bool:
++    valid_ext = ['.cu', '.cuh']
++    return os.path.splitext(path)[1] in valid_ext
++
++
++def verify_ninja_availability():
++    if not is_ninja_available():
++        raise RuntimeError("Ninja is required to load C++ extensions")
++
++
++def _write_ninja_file(path,
++                      cflags,
++                      post_cflags,
++                      cuda_cflags,
++                      cuda_post_cflags,
++                      sources,
++                      objects,
++                      ldflags,
++                      library_target,
++                      with_cuda) -> None:
++    def sanitize_flags(flags):
++        if flags is None:
++            return []
++        else:
++            return [flag.strip() for flag in flags]
++
++    cflags = sanitize_flags(cflags)
++    post_cflags = sanitize_flags(post_cflags)
++    cuda_cflags = sanitize_flags(cuda_cflags)
++    cuda_post_cflags = sanitize_flags(cuda_post_cflags)
++    ldflags = sanitize_flags(ldflags)
++
++    # Sanity checks...
++    assert len(sources) == len(objects)
++    assert len(sources) > 0
++
++    compiler = os.environ.get('CXX', 'c++')
++
++    # Version 1.3 is required for the `deps` directive.
++    config = ['ninja_required_version = 1.3']
++    config.append(f'cxx = {compiler}')
++
++    flags = [f'cflags = {" ".join(cflags)}']
++    flags.append(f'post_cflags = {" ".join(post_cflags)}')
++    flags.append(f'ldflags = {" ".join(ldflags)}')
++
++    # Turn into absolute paths so we can emit them into the ninja build
++    # file wherever it is.
++    sources = [os.path.abspath(file) for file in sources]
++
++    # See https://ninja-build.org/build.ninja.html for reference.
++    compile_rule = ['rule compile']
++    compile_rule.append(
++        '  command = $cxx -MMD -MF $out.d $cflags -c $in -o $out $post_cflags')
++    compile_rule.append('  depfile = $out.d')
++    compile_rule.append('  deps = gcc')
++
++    # Emit one build rule per source to enable incremental build.
++    build = []
++    for source_file, object_file in zip(sources, objects):
++        is_cuda_source = _is_cuda_file(source_file) and with_cuda
++        rule = 'cuda_compile' if is_cuda_source else 'compile'
++        source_file = source_file.replace(" ", "$ ")
++        object_file = object_file.replace(" ", "$ ")
++        build.append(f'build {object_file}: {rule} {source_file}')
++
++    if library_target is not None:
++        link_rule = ['rule link']
++        link_rule.append('  command = $cxx $in $ldflags -o $out')
++
++        link = [f'build {library_target}: link {" ".join(objects)}']
++
++        default = [f'default {library_target}']
++    else:
++        link_rule, link, default = [], [], []
++
++    # 'Blocks' should be separated by newlines, for visual benefit.
++    blocks = [config, flags, compile_rule]
++    blocks += [link_rule, build, link, default]
++    with open(path, 'w') as build_file:
++        for block in blocks:
++            lines = '\n'.join(block)
++            build_file.write(f'{lines}\n\n')
++
++
++def _write_ninja_file_and_compile_objects(
++        sources: List[str],
++        objects,
++        cflags,
++        post_cflags,
++        cuda_cflags,
++        cuda_post_cflags,
++        build_directory: str,
++        verbose: bool,
++        with_cuda) -> None:
++    verify_ninja_availability()
++    compiler = os.environ.get('CXX', 'c++')
++    check_compiler_abi_compatibility(compiler)
++    if with_cuda is None:
++        with_cuda = any(map(_is_cuda_file, sources))
++    build_file_path = os.path.join(build_directory, 'build.ninja')
++    if verbose:
++        print(f'Emitting ninja build file {build_file_path}...')
++    _write_ninja_file(
++        path=build_file_path,
++        cflags=cflags,
++        post_cflags=post_cflags,
++        cuda_cflags=cuda_cflags,
++        cuda_post_cflags=cuda_post_cflags,
++        sources=sources,
++        objects=objects,
++        ldflags=[os.environ['LDFLAGS'], '-L' + os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'lib')],
++        library_target=None,
++        with_cuda=with_cuda)
++    if verbose:
++        print('Compiling objects...')
++    _run_ninja_build(
++        build_directory,
++        verbose,
++        # It would be better if we could tell users the name of the extension
++        # that failed to build but there isn't a good way to get it here.
++        error_prefix='Error compiling objects for extension')
++
++
++def _run_ninja_build(build_directory: str, verbose: bool, error_prefix: str) -> None:
++    command = ['ninja', '-v']
++    num_workers = _get_num_workers(verbose)
++    if num_workers is not None:
++        command.extend(['-j', str(num_workers)])
++    env = os.environ.copy()
++    try:
++        sys.stdout.flush()
++        sys.stderr.flush()
++        stdout_fileno = 1
++        subprocess.run(
++            command,
++            stdout=stdout_fileno if verbose else subprocess.PIPE,
++            stderr=subprocess.STDOUT,
++            cwd=build_directory,
++            check=True,
++            env=env)
++    except subprocess.CalledProcessError as e:
++        # Python 2 and 3 compatible way of getting the error object.
++        _, error, _ = sys.exc_info()
++        # error.output contains the stdout and stderr of the build attempt.
++        message = error_prefix
++        # `error` is a CalledProcessError (which has an `ouput`) attribute, but
++        # mypy thinks it's Optional[BaseException] and doesn't narrow
++        if hasattr(error, 'output') and error.output:  # type: ignore[union-attr]
++            message += f": {error.output.decode(*SUBPROCESS_DECODE_ARGS)}"  # type: ignore[union-attr]
++        raise RuntimeError(message) from e
++
++
++def _accepted_compilers_for_platform() -> List[str]:
++    # gnu-c++ and gnu-cc are the conda gcc compilers
++    return ['clang++', 'clang'] if sys.platform.startswith('darwin') else ['g++', 'gcc', 'gnu-c++', 'gnu-cc']
++
++
++def check_compiler_abi_compatibility(compiler) -> bool:
++    if os.environ.get('TORCH_DONT_CHECK_COMPILER_ABI') in ['ON', '1', 'YES', 'TRUE', 'Y']:
++        return True
++
++    # First check if the compiler is one of the expected ones for the particular platform.
++    if not check_compiler_ok_for_platform(compiler):
++        warnings.warn(f'Your compiler ({compiler}) is not compatible with the compiler Pytorch was built with for this platform')
++        return False
++
++    if sys.platform.startswith('darwin'):
++        # There is no particular minimum version we need for clang, so we're good here.
++        return True
++    try:
++        if sys.platform.startswith('linux'):
++            minimum_required_version = MINIMUM_GCC_VERSION
++            versionstr = subprocess.check_output([compiler.split(' ')[0], '-dumpfullversion', '-dumpversion'])
++            version = versionstr.decode(*SUBPROCESS_DECODE_ARGS).strip().split('.')
++    except Exception:
++        _, error, _ = sys.exc_info()
++        warnings.warn(f'Error checking compiler version for {compiler}: {error}')
++        return False
++
++    if tuple(map(int, version)) >= minimum_required_version:
++        return True
++
++    compiler = f'{compiler} {".".join(version)}'
++    warnings.warn(f'Your compiler ({compiler}) may be ABI-incompatible with PyTorch!')
++
++    return False
++
++
++def check_compiler_ok_for_platform(compiler: str) -> bool:
++    which = subprocess.check_output(['which', compiler.split(' ')[0]], stderr=subprocess.STDOUT)
++    # Use os.path.realpath to resolve any symlinks, in particular from 'c++' to e.g. 'g++'.
++    compiler_path = os.path.realpath(which.decode(*SUBPROCESS_DECODE_ARGS).strip())
++    # Check the compiler name
++    if any(name in compiler_path for name in _accepted_compilers_for_platform()):
++        return True
++    # If ccache is used the compiler path is /usr/bin/ccache. Check by -v flag.
++    version_string = subprocess.check_output([compiler, '-v'], stderr=subprocess.STDOUT).decode(*SUBPROCESS_DECODE_ARGS)
++    if sys.platform.startswith('linux'):
++        # Check for 'gcc' or 'g++'
++        pattern = re.compile("^COLLECT_GCC=(.*)$", re.MULTILINE)
++        results = re.findall(pattern, version_string)
++        if len(results) != 1:
++            return False
++        compiler_path = os.path.realpath(results[0].strip())
++        return any(name in compiler_path for name in _accepted_compilers_for_platform())
++    if sys.platform.startswith('darwin'):
++        # Check for 'clang' or 'clang++'
++        return version_string.startswith("Apple clang")
++    return False
++
++
++class BuildExtension(build_ext, object):
++    @classmethod
++    def with_options(cls, **options):
++        r'''
++        Returns a subclass with alternative constructor that extends any original keyword
++        arguments to the original constructor with the given options.
++        '''
++        class cls_with_options(cls):  # type: ignore[misc, valid-type]
++            def __init__(self, *args, **kwargs):
++                kwargs.update(options)
++                super().__init__(*args, **kwargs)
++
++        return cls_with_options
++
++    def __init__(self, *args, **kwargs) -> None:
++        super(BuildExtension, self).__init__(*args, **kwargs)
++        self.no_python_abi_suffix = kwargs.get("no_python_abi_suffix", False)
++
++        self.use_ninja = kwargs.get('use_ninja', True)
++        if self.use_ninja:
++            # Test if we can use ninja. Fallback otherwise.
++            msg = ('Attempted to use ninja as the BuildExtension backend but '
++                   '{}. Falling back to using the slow distutils backend.')
++            if not is_ninja_available():
++                warnings.warn(msg.format('we could not find ninja.'))
++                self.use_ninja = False
++
++    def finalize_options(self) -> None:
++        super().finalize_options()
++        if self.use_ninja:
++            self.force = True
++
++    def build_extensions(self) -> None:
++        self._check_abi()
++
++        cuda_ext = False
++        extension_iter = iter(self.extensions)
++        extension = next(extension_iter, None)
++        while not cuda_ext and extension:
++            for source in extension.sources:
++                _, ext = os.path.splitext(source)
++                if ext == '.cu':
++                    cuda_ext = True
++                    break
++            extension = next(extension_iter, None)
++
++        for extension in self.extensions:
++            if isinstance(extension.extra_compile_args, dict):
++                for ext in ['cxx', 'nvcc']:
++                    if ext not in extension.extra_compile_args:
++                        extension.extra_compile_args[ext] = []
++
++            self._add_compile_flag(extension, '-DTORCH_API_INCLUDE_EXTENSION_H')
++            # See note [Pybind11 ABI constants]
++            for name, val in {"COMPILER_TYPE": '_gcc', "STDLIB": '_libstdcpp', "BUILD_ABI": '_cxxabi1014'}.items():
++                self._add_compile_flag(extension, f'-DPYBIND11_{name}="{val}"')
++            self._define_torch_extension_name(extension)
++            self._add_gnu_cpp_abi_flag(extension)
++
++        # Register .cu, .cuh and .hip as valid source extensions.
++        self.compiler.src_extensions += ['.cu', '.cuh', '.hip']
++        # Save the original _compile method for later.
++        if self.compiler.compiler_type == 'msvc':
++            self.compiler._cpp_extensions += ['.cu', '.cuh']
++            original_compile = self.compiler.compile
++        else:
++            original_compile = self.compiler._compile
++
++        def append_std17_if_no_std_present(cflags) -> None:
++            # NVCC does not allow multiple -std to be passed, so we avoid
++            # overriding the option if the user explicitly passed it.
++            cpp_format_prefix = '/{}:' if self.compiler.compiler_type == 'msvc' else '-{}='
++            cpp_flag_prefix = cpp_format_prefix.format('std')
++            cpp_flag = cpp_flag_prefix + 'c++17'
++            if not any(flag.startswith(cpp_flag_prefix) for flag in cflags):
++                cflags.append(cpp_flag)
++
++        def convert_to_absolute_paths_inplace(paths):
++            # Helper function. See Note [Absolute include_dirs]
++            if paths is not None:
++                for i in range(len(paths)):
++                    if not os.path.isabs(paths[i]):
++                        paths[i] = os.path.abspath(paths[i])
++
++        def unix_wrap_single_compile(obj, src, ext, cc_args, extra_postargs, pp_opts) -> None:
++            # Copy before we make any modifications.
++            cflags = copy.deepcopy(extra_postargs)
++            try:
++                original_compiler = self.compiler.compiler_so
++                if _is_cuda_file(src):
++                    pass
++                elif isinstance(cflags, dict):
++                    cflags = cflags['cxx']
++                append_std17_if_no_std_present(cflags)
++
++                original_compile(obj, src, ext, cc_args, cflags, pp_opts)
++            finally:
++                # Put the original compiler back in place.
++                self.compiler.set_executable('compiler_so', original_compiler)
++
++        def unix_wrap_ninja_compile(sources,
++                                    output_dir=None,
++                                    macros=None,
++                                    include_dirs=None,
++                                    debug=0,
++                                    extra_preargs=None,
++                                    extra_postargs=None,
++                                    depends=None):
++            output_dir = os.path.abspath(output_dir)
++
++            # See Note [Absolute include_dirs]
++            convert_to_absolute_paths_inplace(self.compiler.include_dirs)
++
++            _, objects, extra_postargs, pp_opts, _ = \
++                self.compiler._setup_compile(output_dir, macros,
++                                             include_dirs, sources,
++                                             depends, extra_postargs)
++            common_cflags = self.compiler._get_cc_args(pp_opts, debug, extra_preargs)
++            extra_cc_cflags = self.compiler.compiler_so[1:]
++            with_cuda = any(map(_is_cuda_file, sources))
++
++            # extra_postargs can be either:
++            # - a dict mapping cxx/nvcc to extra flags
++            # - a list of extra flags.
++            if isinstance(extra_postargs, dict):
++                post_cflags = extra_postargs['cxx']
++            else:
++                post_cflags = list(extra_postargs)
++            # if IS_HIP_EXTENSION:
++            #     post_cflags = COMMON_HIP_FLAGS + post_cflags
++            append_std17_if_no_std_present(post_cflags)
++
++            cuda_post_cflags = None
++            cuda_cflags = None
++
++            _write_ninja_file_and_compile_objects(
++                sources=sources,
++                objects=objects,
++                cflags=[shlex.quote(f) for f in extra_cc_cflags + common_cflags],
++                post_cflags=[shlex.quote(f) for f in post_cflags],
++                cuda_cflags=cuda_cflags,
++                cuda_post_cflags=cuda_post_cflags,
++                build_directory=output_dir,
++                verbose=True,
++                with_cuda=with_cuda)
++
++            # Return *all* object filenames, not just the ones we just built.
++            return objects
++
++        # Monkey-patch the _compile or compile method.
++        # https://github.com/python/cpython/blob/dc0284ee8f7a270b6005467f26d8e5773d76e959/Lib/distutils/ccompiler.py#L511
++
++        if self.use_ninja:
++            self.compiler.compile = unix_wrap_ninja_compile
++        else:
++            self.compiler._compile = unix_wrap_single_compile
++
++        build_ext.build_extensions(self)
++
++    def get_ext_filename(self, ext_name):
++        # Get the original shared library name. For Python 3, this name will be
++        # suffixed with "<SOABI>.so", where <SOABI> will be something like
++        # cpython-37m-x86_64-linux-gnu.
++        ext_filename = super(BuildExtension, self).get_ext_filename(ext_name)
++        # If `no_python_abi_suffix` is `True`, we omit the Python 3 ABI
++        # component. This makes building shared libraries with setuptools that
++        # aren't Python modules nicer.
++        if self.no_python_abi_suffix:
++            # The parts will be e.g. ["my_extension", "cpython-37m-x86_64-linux-gnu", "so"].
++            ext_filename_parts = ext_filename.split('.')
++            # Omit the second to last element.
++            without_abi = ext_filename_parts[:-2] + ext_filename_parts[-1:]
++            ext_filename = '.'.join(without_abi)
++        return ext_filename
++
++    def _check_abi(self):
++        # On some platforms, like Windows, compiler_cxx is not available.
++        if hasattr(self.compiler, 'compiler_cxx'):
++            compiler = self.compiler.compiler_cxx[0]
++        else:
++            compiler = os.environ.get('CXX', 'c++')
++        check_compiler_abi_compatibility(compiler)
++
++    def _add_compile_flag(self, extension, flag):
++        extension.extra_compile_args = copy.deepcopy(extension.extra_compile_args)
++        if isinstance(extension.extra_compile_args, dict):
++            for args in extension.extra_compile_args.values():
++                args.append(flag)
++        else:
++            extension.extra_compile_args.append(flag)
++
++    def _define_torch_extension_name(self, extension):
++        names = extension.name.split('.')
++        name = names[-1]
++        define = f'-DTORCH_EXTENSION_NAME={name}'
++        self._add_compile_flag(extension, define)
++
++    def _add_gnu_cpp_abi_flag(self, extension):
++        # use the same CXX ABI as what PyTorch was compiled with
++        self._add_compile_flag(extension, '-D_GLIBCXX_USE_CXX11_ABI=' + str(int(True)))
+ 
+ 
+ def read(*names, **kwargs):
+@@ -150,41 +634,18 @@ def get_extensions():
+     print(f"  TORCHVISION_USE_PNG: {use_png}")
+     use_jpeg = os.getenv("TORCHVISION_USE_JPEG", "1") == "1"
+     print(f"  TORCHVISION_USE_JPEG: {use_jpeg}")
+-    use_nvjpeg = os.getenv("TORCHVISION_USE_NVJPEG", "1") == "1"
++    use_nvjpeg = False
+     print(f"  TORCHVISION_USE_NVJPEG: {use_nvjpeg}")
+     use_ffmpeg = os.getenv("TORCHVISION_USE_FFMPEG", "1") == "1"
+     print(f"  TORCHVISION_USE_FFMPEG: {use_ffmpeg}")
+-    use_video_codec = os.getenv("TORCHVISION_USE_VIDEO_CODEC", "1") == "1"
++    use_video_codec = False
+     print(f"  TORCHVISION_USE_VIDEO_CODEC: {use_video_codec}")
+ 
+     nvcc_flags = os.getenv("NVCC_FLAGS", "")
+     print(f"  NVCC_FLAGS: {nvcc_flags}")
+ 
+     is_rocm_pytorch = False
+-
+-    if torch.__version__ >= "1.5":
+-        from torch.utils.cpp_extension import ROCM_HOME
+-
+-        is_rocm_pytorch = (torch.version.hip is not None) and (ROCM_HOME is not None)
+-
+-    if is_rocm_pytorch:
+-        from torch.utils.hipify import hipify_python
+-
+-        hipify_python.hipify(
+-            project_directory=this_dir,
+-            output_directory=this_dir,
+-            includes="torchvision/csrc/ops/cuda/*",
+-            show_detailed=True,
+-            is_pytorch_extension=True,
+-        )
+-        source_cuda = glob.glob(os.path.join(extensions_dir, "ops", "hip", "*.hip"))
+-        # Copy over additional files
+-        for file in glob.glob(r"torchvision/csrc/ops/cuda/*.h"):
+-            shutil.copy(file, "torchvision/csrc/ops/hip")
+-    else:
+-        source_cuda = glob.glob(os.path.join(extensions_dir, "ops", "cuda", "*.cu"))
+-
+-    source_cuda += glob.glob(os.path.join(extensions_dir, "ops", "autocast", "*.cpp"))
++    source_cuda = glob.glob(os.path.join(extensions_dir, "ops", "autocast", "*.cpp"))
+ 
+     sources = main_file + source_cpu
+     extension = CppExtension
+@@ -192,21 +653,6 @@ def get_extensions():
+     define_macros = []
+ 
+     extra_compile_args = {"cxx": []}
+-    if (torch.cuda.is_available() and ((CUDA_HOME is not None) or is_rocm_pytorch)) or force_cuda:
+-        extension = CUDAExtension
+-        sources += source_cuda
+-        if not is_rocm_pytorch:
+-            define_macros += [("WITH_CUDA", None)]
+-            if nvcc_flags == "":
+-                nvcc_flags = []
+-            else:
+-                nvcc_flags = nvcc_flags.split(" ")
+-        else:
+-            define_macros += [("WITH_HIP", None)]
+-            nvcc_flags = []
+-        extra_compile_args["nvcc"] = nvcc_flags
+-    elif torch.backends.mps.is_available() or force_mps:
+-        sources += source_mps
+ 
+     if sys.platform == "win32":
+         define_macros += [("torchvision_EXPORTS", None)]
+@@ -259,72 +705,26 @@ def get_extensions():
+         image_macros += [("USE_PYTHON", None)]
+ 
+     # Locating libPNG
+-    libpng = shutil.which("libpng-config")
+-    pngfix = shutil.which("pngfix")
+-    png_found = libpng is not None or pngfix is not None
+-
+-    use_png = use_png and png_found
+     if use_png:
+         print("Found PNG library")
+-        if libpng is not None:
+-            # Linux / Mac
+-            min_version = "1.6.0"
+-            png_version = subprocess.run([libpng, "--version"], stdout=subprocess.PIPE)
+-            png_version = png_version.stdout.strip().decode("utf-8")
+-            png_version = parse_version(png_version)
+-            if png_version >= parse_version(min_version):
+-                print("Building torchvision with PNG image support")
+-                png_lib = subprocess.run([libpng, "--libdir"], stdout=subprocess.PIPE)
+-                png_lib = png_lib.stdout.strip().decode("utf-8")
+-                if "disabled" not in png_lib:
+-                    image_library += [png_lib]
+-                png_include = subprocess.run([libpng, "--I_opts"], stdout=subprocess.PIPE)
+-                png_include = png_include.stdout.strip().decode("utf-8")
+-                _, png_include = png_include.split("-I")
+-                image_include += [png_include]
+-                image_link_flags.append("png")
+-                print(f"  libpng version: {png_version}")
+-                print(f"  libpng include path: {png_include}")
+-            else:
+-                print("Could not add PNG image support to torchvision:")
+-                print(f"  libpng minimum version {min_version}, found {png_version}")
+-                use_png = False
+-        else:
+-            # Windows
+-            png_lib = os.path.join(os.path.dirname(os.path.dirname(pngfix)), "lib")
+-            png_include = os.path.join(os.path.dirname(os.path.dirname(pngfix)), "include", "libpng16")
+-            image_library += [png_lib]
+-            image_include += [png_include]
+-            image_link_flags.append("libpng")
++        image_link_flags.append("png")
+     else:
+         print("Building torchvision without PNG image support")
+     image_macros += [("PNG_FOUND", str(int(use_png)))]
+ 
+     # Locating libjpeg
+-    (jpeg_found, jpeg_conda, jpeg_include, jpeg_lib) = find_library("jpeglib", vision_include)
+-
+-    use_jpeg = use_jpeg and jpeg_found
++    jpeg_include = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'include')
++    jpeg_lib = os.path.join(os.environ['PKG_CONFIG_SYSROOT_DIR'], 'usr', 'lib')
+     if use_jpeg:
+         print("Building torchvision with JPEG image support")
+         print(f"  libjpeg include path: {jpeg_include}")
+         print(f"  libjpeg lib path: {jpeg_lib}")
+         image_link_flags.append("jpeg")
+-        if jpeg_conda:
+-            image_library += [jpeg_lib]
+-            image_include += [jpeg_include]
+     else:
+         print("Building torchvision without JPEG image support")
+     image_macros += [("JPEG_FOUND", str(int(use_jpeg)))]
+ 
+     # Locating nvjpeg
+-    # Should be included in CUDA_HOME for CUDA >= 10.1, which is the minimum version we have in the CI
+-    nvjpeg_found = (
+-        extension is CUDAExtension
+-        and CUDA_HOME is not None
+-        and os.path.exists(os.path.join(CUDA_HOME, "include", "nvjpeg.h"))
+-    )
+-
+-    use_nvjpeg = use_nvjpeg and nvjpeg_found
+     if use_nvjpeg:
+         print("Building torchvision with NVJPEG image support")
+         image_link_flags.append("nvjpeg")
+@@ -356,62 +756,14 @@ def get_extensions():
+         )
+ 
+     # Locating ffmpeg
+-    ffmpeg_exe = shutil.which("ffmpeg")
+-    has_ffmpeg = ffmpeg_exe is not None
+-    ffmpeg_version = None
+-    # FIXME: Building torchvision with ffmpeg on MacOS or with Python 3.9
+-    # FIXME: causes crash. See the following GitHub issues for more details.
+-    # FIXME: https://github.com/pytorch/pytorch/issues/65000
+-    # FIXME: https://github.com/pytorch/vision/issues/3367
+-    if sys.platform != "linux" or (sys.version_info.major == 3 and sys.version_info.minor == 9):
+-        has_ffmpeg = False
+-    if has_ffmpeg:
+-        try:
+-            # This is to check if ffmpeg is installed properly.
+-            ffmpeg_version = subprocess.check_output(["ffmpeg", "-version"])
+-        except subprocess.CalledProcessError:
+-            print("Building torchvision without ffmpeg support")
+-            print("  Error fetching ffmpeg version, ignoring ffmpeg.")
+-            has_ffmpeg = False
+-
+-    use_ffmpeg = use_ffmpeg and has_ffmpeg
+-
+     if use_ffmpeg:
+-        ffmpeg_libraries = {"libavcodec", "libavformat", "libavutil", "libswresample", "libswscale"}
+-
+-        ffmpeg_bin = os.path.dirname(ffmpeg_exe)
+-        ffmpeg_root = os.path.dirname(ffmpeg_bin)
+-        ffmpeg_include_dir = os.path.join(ffmpeg_root, "include")
+-        ffmpeg_library_dir = os.path.join(ffmpeg_root, "lib")
+-
+-        gcc = os.environ.get("CC", shutil.which("gcc"))
+-        platform_tag = subprocess.run([gcc, "-print-multiarch"], stdout=subprocess.PIPE)
+-        platform_tag = platform_tag.stdout.strip().decode("utf-8")
+-
+-        if platform_tag:
+-            # Most probably a Debian-based distribution
+-            ffmpeg_include_dir = [ffmpeg_include_dir, os.path.join(ffmpeg_include_dir, platform_tag)]
+-            ffmpeg_library_dir = [ffmpeg_library_dir, os.path.join(ffmpeg_library_dir, platform_tag)]
+-        else:
+-            ffmpeg_include_dir = [ffmpeg_include_dir]
+-            ffmpeg_library_dir = [ffmpeg_library_dir]
+-
+-        for library in ffmpeg_libraries:
+-            library_found = False
+-            for search_path in ffmpeg_include_dir + include_dirs:
+-                full_path = os.path.join(search_path, library, "*.h")
+-                library_found |= len(glob.glob(full_path)) > 0
+-
+-            if not library_found:
+-                print("Building torchvision without ffmpeg support")
+-                print(f"  {library} header files were not found, disabling ffmpeg support")
+-                use_ffmpeg = False
++        ffmpeg_include_dir = [jpeg_include]
++        ffmpeg_library_dir = [jpeg_lib]
+     else:
+         print("Building torchvision without ffmpeg support")
+ 
+     if use_ffmpeg:
+         print("Building torchvision with ffmpeg support")
+-        print(f"  ffmpeg version: {ffmpeg_version}")
+         print(f"  ffmpeg include path: {ffmpeg_include_dir}")
+         print(f"  ffmpeg library_dir: {ffmpeg_library_dir}")
+ 
+@@ -453,66 +805,6 @@ def get_extensions():
+             )
+         )
+ 
+-    # Locating video codec
+-    # CUDA_HOME should be set to the cuda root directory.
+-    # TORCHVISION_INCLUDE and TORCHVISION_LIBRARY should include the location to
+-    # video codec header files and libraries respectively.
+-    video_codec_found = (
+-        extension is CUDAExtension
+-        and CUDA_HOME is not None
+-        and any([os.path.exists(os.path.join(folder, "cuviddec.h")) for folder in vision_include])
+-        and any([os.path.exists(os.path.join(folder, "nvcuvid.h")) for folder in vision_include])
+-        and any([os.path.exists(os.path.join(folder, "libnvcuvid.so")) for folder in library_dirs])
+-    )
+-
+-    use_video_codec = use_video_codec and video_codec_found
+-    if (
+-        use_video_codec
+-        and use_ffmpeg
+-        and any([os.path.exists(os.path.join(folder, "libavcodec", "bsf.h")) for folder in ffmpeg_include_dir])
+-    ):
+-        print("Building torchvision with video codec support")
+-        gpu_decoder_path = os.path.join(extensions_dir, "io", "decoder", "gpu")
+-        gpu_decoder_src = glob.glob(os.path.join(gpu_decoder_path, "*.cpp"))
+-        cuda_libs = os.path.join(CUDA_HOME, "lib64")
+-        cuda_inc = os.path.join(CUDA_HOME, "include")
+-
+-        ext_modules.append(
+-            extension(
+-                "torchvision.Decoder",
+-                gpu_decoder_src,
+-                include_dirs=include_dirs + [gpu_decoder_path] + [cuda_inc] + ffmpeg_include_dir,
+-                library_dirs=ffmpeg_library_dir + library_dirs + [cuda_libs],
+-                libraries=[
+-                    "avcodec",
+-                    "avformat",
+-                    "avutil",
+-                    "swresample",
+-                    "swscale",
+-                    "nvcuvid",
+-                    "cuda",
+-                    "cudart",
+-                    "z",
+-                    "pthread",
+-                    "dl",
+-                    "nppicc",
+-                ],
+-                extra_compile_args=extra_compile_args,
+-            )
+-        )
+-    else:
+-        print("Building torchvision without video codec support")
+-        if (
+-            use_video_codec
+-            and use_ffmpeg
+-            and not any([os.path.exists(os.path.join(folder, "libavcodec", "bsf.h")) for folder in ffmpeg_include_dir])
+-        ):
+-            print(
+-                "  The installed version of ffmpeg is missing the header file 'bsf.h' which is "
+-                "  required for GPU video decoding. Please install the latest ffmpeg from conda-forge channel:"
+-                "   `conda install -c conda-forge ffmpeg`."
+-            )
+-
+     return ext_modules
+ 
+ 
+-- 
+2.34.1
+
