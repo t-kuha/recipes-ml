@@ -24,6 +24,7 @@ DEPENDS = "coreutils-native "
 SRC_URI = "\
     git://github.com/ARM-software/ComputeLibrary.git;protocol=https;branch=main \
     file://0001-Fix-compile-error.patch \
+    file://0002-Fix-compile-error.patch \
 "
 
 inherit scons
