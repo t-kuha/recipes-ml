@@ -21,6 +21,7 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=9ecce103fa3ee74c5a0cda57238285a6"
 SRC_URI = " \
     gitsm://github.com/Xilinx/pyxir.git;protocol=https;branch=master \
     file://0001-Add-support-for-cross-compilation-in-Yocto.patch \
+    file://0002-Add-missing-include.patch \
 "
 
 RDEPENDS:${PN} += "glog xir vart python3"

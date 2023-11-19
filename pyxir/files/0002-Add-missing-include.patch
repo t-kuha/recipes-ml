@@ -1,0 +1,24 @@
+From 3b613055c8aa5b170874bc0b44898fe1cd6f1bca Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sun, 19 Nov 2023 06:32:51 +0000
+Subject: [PATCH] Add missing include
+
+---
+ include/pyxir/common/util.hpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/pyxir/common/util.hpp b/include/pyxir/common/util.hpp
+index 3d0ec33..3cd3cb7 100644
+--- a/include/pyxir/common/util.hpp
++++ b/include/pyxir/common/util.hpp
+@@ -18,6 +18,7 @@
+ 
+ #include <iostream>
+ #include <string>
++#include <string.h>
+ #include <regex>
+ #include <ftw.h>
+ #include <unistd.h>
+-- 
+2.34.1
+
