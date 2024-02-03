@@ -6,8 +6,8 @@ SUMMARY = "PyTorch"
 DESCRIPTION = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
 
 # Version to use
-SRCREV = "7bcf7da3a268b435777fe87c7794c382f444e86d"
-PV = "2.1.0"
+SRCREV = "8ac9b20d4b090c213799e81acf48a55ea8d437d6"
+PV = "2.2.0"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -15,11 +15,11 @@ S = "${WORKDIR}/git"
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 LICENSE = "MIT"
 
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=5c853508d63a8090fa952ff1af58217d"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=d2458eb5f2c8ca7e232ef333f22c96f8"
 
 # "gitsm" not working?
 SRC_URI = " \
-    git://github.com/pytorch/pytorch.git;protocol=https;branch=release/2.1 \
+    git://github.com/pytorch/pytorch.git;protocol=https;branch=release/2.2 \
     file://0001-Add-support-for-Yocto-build.patch \
 "
 
@@ -41,7 +41,8 @@ do_configure:prepend(){
     # alternative to "gitsm"
     cd ${S}
     git submodule sync
-    git submodule update --init --recursive --jobs=$(nproc)
+    git submodule update --init --recursive 
+    #--jobs=$(nproc)
 
     # install required modules
     pip3 install pyyaml typing_extensions opt-einsum
@@ -66,3 +67,6 @@ do_compile() {
     export BUILD_TEST=0
     setuptools3_do_compile
 }
+
+INSANE_SKIP:${PN} += "already-stripped"
+# since v2.2.0

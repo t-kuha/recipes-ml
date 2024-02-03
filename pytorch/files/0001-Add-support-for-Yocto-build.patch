@@ -1,32 +1,30 @@
-From da971b2e39aa83154b16474b389091c4fb68023d Mon Sep 17 00:00:00 2001
+From 08e3fb6a47effdb81a282b7ba1eed35a745d7fea Mon Sep 17 00:00:00 2001
 From: t-kuha <imagingtechnerd@gmail.com>
-Date: Sat, 14 Oct 2023 13:20:43 +0000
+Date: Thu, 1 Feb 2024 06:51:19 +0000
 Subject: [PATCH] Add support for Yocto build
 
 ---
- CMakeLists.txt               |  6 +++---
+ CMakeLists.txt               |  4 ++--
  cmake/public/protobuf.cmake  |  2 +-
  setup.py                     |  4 ++--
  tools/setup_helpers/cmake.py | 12 +++++-------
- 4 files changed, 11 insertions(+), 13 deletions(-)
+ 4 files changed, 10 insertions(+), 12 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 3a48eaf4e29..2a34e8f2057 100644
+index 9194e520bb0..133a7805c5d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -883,9 +883,9 @@ if(NOT MSVC)
+@@ -896,8 +896,8 @@ if(NOT MSVC)
    append_cxx_flag_if_supported("-Wno-error=inconsistent-missing-override" CMAKE_CXX_FLAGS)
    append_cxx_flag_if_supported("-Wno-error=inconsistent-missing-destructor-override" CMAKE_CXX_FLAGS)
    append_cxx_flag_if_supported("-Wconstant-conversion" CMAKE_CXX_FLAGS)
 -  append_cxx_flag_if_supported("-Wno-invalid-partial-specialization" CMAKE_CXX_FLAGS)
--  append_cxx_flag_if_supported("-Wno-unused-private-field" CMAKE_CXX_FLAGS)
 -  append_cxx_flag_if_supported("-Wno-aligned-allocation-unavailable" CMAKE_CXX_FLAGS)
 +  # append_cxx_flag_if_supported("-Wno-invalid-partial-specialization" CMAKE_CXX_FLAGS)
-+  # append_cxx_flag_if_supported("-Wno-unused-private-field" CMAKE_CXX_FLAGS)
 +  # append_cxx_flag_if_supported("-Wno-aligned-allocation-unavailable" CMAKE_CXX_FLAGS)
    append_cxx_flag_if_supported("-Wno-missing-braces" CMAKE_CXX_FLAGS)
-   append_cxx_flag_if_supported("-Wunused-lambda-capture" CMAKE_CXX_FLAGS)
    append_cxx_flag_if_supported("-Qunused-arguments" CMAKE_CXX_FLAGS)
+ 
 diff --git a/cmake/public/protobuf.cmake b/cmake/public/protobuf.cmake
 index 77ec3622b13..683dc07c483 100644
 --- a/cmake/public/protobuf.cmake
@@ -41,10 +39,10 @@ index 77ec3622b13..683dc07c483 100644
    find_package(Protobuf MODULE QUIET)
  endif()
 diff --git a/setup.py b/setup.py
-index 17bf16b89a7..00cbae8f0f5 100644
+index 86cad767c12..c824a4d3b24 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -325,7 +325,7 @@ else:
+@@ -331,7 +331,7 @@ else:
      cmake_python_library = "{}/{}".format(
          sysconfig.get_config_var("LIBDIR"), sysconfig.get_config_var("INSTSONAME")
      )
@@ -53,7 +51,7 @@ index 17bf16b89a7..00cbae8f0f5 100644
  
  
  ################################################################################
-@@ -1019,7 +1019,7 @@ def configure_extension_build():
+@@ -997,7 +997,7 @@ def configure_extension_build():
          sources=main_sources,
          language="c",
          extra_compile_args=main_compile_args + extra_compile_args,
