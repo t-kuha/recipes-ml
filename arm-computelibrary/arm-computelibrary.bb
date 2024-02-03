@@ -8,8 +8,8 @@ DESCRIPTION = "The ARM Computer Vision and Machine Learning library is a set of 
 COMPATIBLE_MACHINE = "armv7a|aarch64"
 
 # Version to use
-SRCREV = "874e0c7b3fe93a6764ecb2d8cfad924af19a9d25"
-PV = "23.08"
+SRCREV = "add70ace1e57f65d1ae4d0cedaec6e4578cf87ff"
+PV = "23.11"
 PR = "r0"
 
 S = "${WORKDIR}/git"
