@@ -1,5 +1,6 @@
 #
 # oneDNN
+#   - ARM ComputeLibrary version must be <= v23.08
 #
 
 SUMMARY = "oneDNN"
@@ -7,7 +8,7 @@ DESCRIPTION = "oneAPI Deep Neural Network Library (oneDNN)"
 
 # oneDNN version to use
 SRCREV = "08fea71aff4c273e34579e86396405f95d34aa74"
-PV = "3.3"
+PV = "3.3.4"
 PR = "r0"
 
 LICENSE = "Apache-2.0"
