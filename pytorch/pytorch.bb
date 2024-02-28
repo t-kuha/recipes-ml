@@ -15,7 +15,7 @@ S = "${WORKDIR}/git"
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 LICENSE = "MIT"
 
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=d2458eb5f2c8ca7e232ef333f22c96f8"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=5c853508d63a8090fa952ff1af58217d"
 
 # "gitsm" not working?
 SRC_URI = " \
