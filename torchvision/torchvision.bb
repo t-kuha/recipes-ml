@@ -6,8 +6,8 @@ SUMMARY = "torchvision"
 DESCRIPTION = "Datasets, Transforms and Models specific to Computer Vision"
 
 # Version to use
-SRCREV = "b2383d44751bf85e58cfb9223bbf4e5961c09fa1"
-PV = "0.17.0"
+SRCREV = "4fd856bfbcf59a4da3a91f0e12515c7ef0709777"
+PV = "0.17.1"
 PR = "r0"
 
 S = "${WORKDIR}/git"
