@@ -8,15 +8,15 @@ DESCRIPTION = "The ARM Computer Vision and Machine Learning library is a set of 
 COMPATIBLE_MACHINE = "armv7a|aarch64"
 
 # Version to use
-SRCREV = "add70ace1e57f65d1ae4d0cedaec6e4578cf87ff"
-PV = "23.11"
+SRCREV = "bc89a0b690200750040770bda0981f4a37b389c4"
+PV = "24.02"
 PR = "r0"
 
 S = "${WORKDIR}/git"
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=a436777748fb1193895c051cea504ab6"
+LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=44ab5c3155cc6931b2798b49c354b7bd"
 
 # for nproc command
 DEPENDS = "coreutils-native " 
