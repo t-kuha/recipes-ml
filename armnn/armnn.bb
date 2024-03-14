@@ -6,8 +6,8 @@ SUMMARY = "ARM NN"
 DESCRIPTION = "Arm NN ML Software."
 
 # Version to use
-SRCREV = "ef0f3e7ac2d49d5eb36adb45c12b3b64fb8dd46f"
-PV = "23.08"
+SRCREV = "2431f762c03ca4092e7970eb312280ddc24a7629"
+PV = "24.02"
 PR = "r0"
 
 S = "${WORKDIR}/git"
@@ -17,7 +17,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=3e14a924c16f7d828b8335a59da64074"
 
 SRC_URI = " \
-    git://github.com/ARM-software/armnn;protocol=https;branch=branches/armnn_23_08 \
+    git://github.com/ARM-software/armnn;protocol=https;branch=branches/armnn_24_02 \
 "
 
 DEPENDS += "boost arm-computelibrary"
