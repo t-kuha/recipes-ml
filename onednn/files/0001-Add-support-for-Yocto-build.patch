@@ -1,19 +1,19 @@
-From 489ee53f751fd1e7cfc0d1b966c7b9287f4919c6 Mon Sep 17 00:00:00 2001
+From e8bec6cf2a68e5c06bae27bf3685b42f2197a579 Mon Sep 17 00:00:00 2001
 From: t-kuha <imagingtechnerd@gmail.com>
-Date: Sat, 7 Oct 2023 19:48:31 +0900
+Date: Sat, 16 Mar 2024 11:57:01 +0000
 Subject: [PATCH] Add support for Yocto build
 
 ---
  cmake/ACL.cmake     |  2 +-
- cmake/FindACL.cmake | 18 ++++++++++--------
- 2 files changed, 11 insertions(+), 9 deletions(-)
+ cmake/FindACL.cmake | 13 +++++++------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/cmake/ACL.cmake b/cmake/ACL.cmake
-index 2aab7690b..80e2e67ca 100644
+index aac79e0e9d..4e289b3c89 100644
 --- a/cmake/ACL.cmake
 +++ b/cmake/ACL.cmake
 @@ -34,7 +34,7 @@ find_package(ACL REQUIRED)
- set(ACL_MINIMUM_VERSION "23.02.1")
+ set(ACL_MINIMUM_VERSION "23.11")
  
  if(ACL_FOUND)
 -    file(GLOB_RECURSE ACL_VERSION_FILE $ENV{ACL_ROOT_DIR}/*/arm_compute_version.embed)
@@ -22,19 +22,16 @@ index 2aab7690b..80e2e67ca 100644
          message(WARNING "Build may fail: Could not determine ACL version (minimum required is ${ACL_MINIMUM_VERSION})")
      else()
 diff --git a/cmake/FindACL.cmake b/cmake/FindACL.cmake
-index 674cdb968..99aaf165c 100644
+index 2eaf95761e..af96b5a352 100644
 --- a/cmake/FindACL.cmake
 +++ b/cmake/FindACL.cmake
-@@ -21,16 +21,18 @@
- #
- 
+@@ -23,14 +23,15 @@
  # Use ACL_ROOT_DIR environment variable to find the library and headers
-+message(${ACL_ROOT_DIR})
  find_path(ACL_INCLUDE_DIR
    NAMES arm_compute/graph.h
 -  PATHS ENV ACL_ROOT_DIR
 +  PATHS ${ACL_ROOT_DIR}
-+  PATH_SUFFIXES include()
++  PATH_SUFFIXES include
    NO_DEFAULT_PATH
    )
  
@@ -47,7 +44,7 @@ index 674cdb968..99aaf165c 100644
    NO_DEFAULT_PATH
    )
  
-@@ -49,20 +51,20 @@ mark_as_advanced(
+@@ -49,14 +50,14 @@ mark_as_advanced(
  if(ACL_FOUND)
    find_path(ACL_EXTRA_INCLUDE_DIR
      NAMES half/half.hpp
@@ -58,14 +55,6 @@ index 674cdb968..99aaf165c 100644
  
    find_library(ACL_GRAPH_LIBRARY
      NAMES arm_compute_graph
--    PATHS ENV ACL_ROOT_DIR
--    PATH_SUFFIXES build
-+    PATHS ${ACL_ROOT_DIR}
-+    PATH_SUFFIXES lib
-     )
- 
-   find_library(ACL_CORE_LIBRARY
-     NAMES arm_compute_core
 -    PATHS ENV ACL_ROOT_DIR
 -    PATH_SUFFIXES build
 +    PATHS ${ACL_ROOT_DIR}
