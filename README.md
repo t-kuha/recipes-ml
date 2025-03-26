@@ -4,9 +4,10 @@
 - Yocto version: Scarthgap (5.0.4)
 
 __caffe__: Caffe v1.0
+__llama.cpp__: llama.cpp (release: b4957 / commit: 053b3f9)
 
 ***
 
-## Some notes on compiling PyTorch
+## Note on PyTorch
 
-- Ample amount of RAM will be necessary (preferably >= 32GB)
+- Now that aarch64 version of wheel is available via PyPI, PyTorch recipe has been dropped.
