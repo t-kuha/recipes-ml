@@ -1,0 +1,80 @@
+From ce475df90d0a8899a6308dd9c30315afd6bdd025 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 14 Oct 2023 15:39:28 +0900
+Subject: [PATCH] Add support for Yocto build
+
+---
+ setup.py                     |  4 ++--
+ tools/setup_helpers/cmake.py | 12 +++++-------
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 17bf16b89a7..00cbae8f0f5 100644
+--- a/setup.py
++++ b/setup.py
+@@ -325,7 +325,7 @@ else:
+     cmake_python_library = "{}/{}".format(
+         sysconfig.get_config_var("LIBDIR"), sysconfig.get_config_var("INSTSONAME")
+     )
+-cmake_python_include_dir = sysconfig.get_path("include")
++cmake_python_include_dir = os.environ['PYTHON_INCLUDE_DIR']
+ 
+ 
+ ################################################################################
+@@ -1019,7 +1019,7 @@ def configure_extension_build():
+         sources=main_sources,
+         language="c",
+         extra_compile_args=main_compile_args + extra_compile_args,
+-        include_dirs=[],
++        include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
+         library_dirs=library_dirs,
+         extra_link_args=extra_link_args
+         + main_link_args
+diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
+index fb19b66dfba..0cc28d8a55b 100644
+--- a/tools/setup_helpers/cmake.py
++++ b/tools/setup_helpers/cmake.py
+@@ -13,7 +13,6 @@ from typing import Any, cast, Dict, List, Optional
+ from . import which
+ from .cmake_utils import CMakeValue, get_cmake_cache_variables_from_file
+ from .env import BUILD_DIR, check_negative_env_flag, IS_64BIT, IS_DARWIN, IS_WINDOWS
+-from .numpy_ import NUMPY_INCLUDE_DIR, USE_NUMPY
+ 
+ 
+ def _mkdir_p(d: str) -> None:
+@@ -231,6 +230,8 @@ class CMake:
+                     "SELECTED_OP_LIST",
+                     "TORCH_CUDA_ARCH_LIST",
+                     "TRACING_BASED",
++                    'NATIVE_BUILD_DIR',
++                    'CAFFE2_CUSTOM_PROTOC_EXECUTABLE',
+                 )
+             }
+         )
+@@ -283,9 +284,6 @@ class CMake:
+                 # are automatically passed to CMake; For other options you can add to additional_options above.
+                 "BUILD_PYTHON": build_python,
+                 "BUILD_TEST": build_test,
+-                # Most library detection should go to CMake script, except this one, which Python can do a much better job
+-                # due to NumPy's inherent Pythonic nature.
+-                "USE_NUMPY": USE_NUMPY,
+             }
+         )
+ 
+@@ -308,10 +306,10 @@ class CMake:
+         CMake.defines(
+             args,
+             PYTHON_EXECUTABLE=sys.executable,
+-            PYTHON_LIBRARY=cmake_python_library,
+-            PYTHON_INCLUDE_DIR=sysconfig.get_path("include"),
++            PYTHON_LIBRARY=os.environ['PYTHON_LIBRARY'],
++            PYTHON_INCLUDE_DIR=os.environ['PYTHON_INCLUDE_DIR'],
+             TORCH_BUILD_VERSION=version,
+-            NUMPY_INCLUDE_DIR=NUMPY_INCLUDE_DIR,
++            NUMPY_INCLUDE_DIR=os.environ['NUMPY_INCLUDE_DIR'],
+             **build_options,
+         )
+ 
+-- 
+2.34.1
+

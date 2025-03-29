@@ -1,0 +1,24 @@
+From 0354f73a012adcc2ee66b76970514aa3171757bf Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 26 Nov 2022 04:50:24 +0000
+Subject: [PATCH] Quick fix for Yocto build
+
+---
+ MANIFEST.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/MANIFEST.in b/MANIFEST.in
+index 403b90b702d..acf4755747e 100644
+--- a/MANIFEST.in
++++ b/MANIFEST.in
+@@ -20,7 +20,6 @@ recursive-include tools *.*
+ recursive-include test *.*
+ recursive-include docs *.*
+ recursive-include ios *.*
+-recursive-include third_party *
+ recursive-include test *.*
+ recursive-include benchmarks *.*
+ recursive-include scripts *.*
+-- 
+2.25.1
+

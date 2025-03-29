@@ -1,0 +1,72 @@
+From 5922b897711c90080dbd9b3f3640732f55904025 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Fri, 16 Aug 2024 13:46:56 +0000
+Subject: [PATCH] Add support for Yocto build
+
+---
+ cmake/public/protobuf.cmake  | 2 +-
+ setup.py                     | 4 ++--
+ tools/setup_helpers/cmake.py | 5 ++---
+ 3 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/cmake/public/protobuf.cmake b/cmake/public/protobuf.cmake
+index 77ec3622b13..683dc07c483 100644
+--- a/cmake/public/protobuf.cmake
++++ b/cmake/public/protobuf.cmake
+@@ -1,7 +1,7 @@
+ # ---[ Protobuf
+ 
+ # We will try to use the config mode first, and then manual find.
+-find_package(Protobuf CONFIG QUIET)
++find_package(Protobuf QUIET)
+ if(NOT Protobuf_FOUND)
+   find_package(Protobuf MODULE QUIET)
+ endif()
+diff --git a/setup.py b/setup.py
+index 9ec41cd37cd..2f407d091a1 100644
+--- a/setup.py
++++ b/setup.py
+@@ -340,7 +340,7 @@ else:
+     cmake_python_library = "{}/{}".format(
+         sysconfig.get_config_var("LIBDIR"), sysconfig.get_config_var("INSTSONAME")
+     )
+-cmake_python_include_dir = sysconfig.get_path("include")
++cmake_python_include_dir = os.environ['PYTHON_INCLUDE_DIR']
+ 
+ 
+ ################################################################################
+@@ -1048,7 +1048,7 @@ def configure_extension_build():
+         sources=main_sources,
+         language="c",
+         extra_compile_args=main_compile_args + extra_compile_args,
+-        include_dirs=[],
++        include_dirs=[os.environ['PYTHON_INCLUDE_DIR']],
+         library_dirs=library_dirs,
+         extra_link_args=extra_link_args
+         + main_link_args
+diff --git a/tools/setup_helpers/cmake.py b/tools/setup_helpers/cmake.py
+index 4d10b3db1aa..ac6e59ef143 100644
+--- a/tools/setup_helpers/cmake.py
++++ b/tools/setup_helpers/cmake.py
+@@ -230,6 +230,8 @@ class CMake:
+                     "SELECTED_OP_LIST",
+                     "TORCH_CUDA_ARCH_LIST",
+                     "TRACING_BASED",
++                    'NATIVE_BUILD_DIR',
++                    'CAFFE2_CUSTOM_PROTOC_EXECUTABLE',
+                 )
+             }
+         )
+@@ -282,9 +284,6 @@ class CMake:
+                 # are automatically passed to CMake; For other options you can add to additional_options above.
+                 "BUILD_PYTHON": build_python,
+                 "BUILD_TEST": build_test,
+-                # Most library detection should go to CMake script, except this one, which Python can do a much better job
+-                # due to NumPy's inherent Pythonic nature.
+-                "USE_NUMPY": not check_negative_env_flag("USE_NUMPY"),
+             }
+         )
+ 
+-- 
+2.34.1
+
