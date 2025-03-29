@@ -1,0 +1,24 @@
+From a1bdfc333e2c6e132e826084cbb28bc85650d8d9 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sun, 19 Nov 2023 10:33:40 +0000
+Subject: [PATCH] Fix compile error
+
+---
+ SConstruct | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/SConstruct b/SConstruct
+index 68c518a4a0..e3ae9a0d87 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -654,6 +654,7 @@ if env['exceptions']:
+ # Unknown variables are not allowed
+ # Note: we must delay the call of UnknownVariables until after
+ # we have applied the Variables object to the construction environment
++_ = vars.UnknownVariables().pop('MAXLINELENGTH', None)
+ unknown = vars.UnknownVariables()
+ if unknown:
+     print("Unknown variables: %s" % " ".join(unknown.keys()))
+-- 
+2.34.1
+

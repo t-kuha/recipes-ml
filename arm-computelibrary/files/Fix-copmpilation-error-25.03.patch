@@ -1,0 +1,42 @@
+From e217e43933cf2a03beda96cd64cb755fe1208dfa Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 29 Mar 2025 05:15:17 +0000
+Subject: [PATCH] Fix copmpilation error
+
+---
+ SConstruct | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/SConstruct b/SConstruct
+index 2c005fc687..306cbb11b3 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -146,6 +146,8 @@ vars.AddVariables(
+     ("compiler_cache", "Command to prefix to the C and C++ compiler (e.g ccache)", ""),
+     ("specs_file", "Specs file to use (e.g. rdimon.specs)", ""),
+     ("build_config", "Operator/Data-type/Data-layout configuration to use for tailored ComputeLibrary builds. Can be a JSON file or a JSON formatted string", ""),
++    ("PREFIX", "dummy"),
++    ("prefix", "dummy"),
+     BoolVariable("test_static_dynamic_linking", "Test that Compute Library built as a static library can be linked into another shared library", False)
+ )
+ 
+@@ -330,7 +332,7 @@ if env['multi_isa']:
+ else: # NONE "multi_isa" builds
+ 
+     if 'v7a' in env['arch']:
+-        env.Append(CCFLAGS = ['-march=armv7-a', '-mthumb', '-mfpu=neon'])
++        env.Append(CCFLAGS = ['-mthumb', '-mfpu=neon'])
+         if (env['os'] == 'android' or env['os'] == 'tizen') and not 'hf' in env['arch']:
+             env.Append(CCFLAGS = ['-mfloat-abi=softfp'])
+         else:
+@@ -634,6 +636,7 @@ if env['exceptions']:
+ # Unknown variables are not allowed
+ # Note: we must delay the call of UnknownVariables until after
+ # we have applied the Variables object to the construction environment
++_ = vars.UnknownVariables().pop('MAXLINELENGTH', None)
+ unknown = vars.UnknownVariables()
+ if unknown:
+     print("Unknown variables: %s" % " ".join(unknown.keys()))
+-- 
+2.34.1
+
