@@ -1,0 +1,67 @@
+From e8bec6cf2a68e5c06bae27bf3685b42f2197a579 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingtechnerd@gmail.com>
+Date: Sat, 16 Mar 2024 11:57:01 +0000
+Subject: [PATCH] Add support for Yocto build
+
+---
+ cmake/ACL.cmake     |  2 +-
+ cmake/FindACL.cmake | 13 +++++++------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/cmake/ACL.cmake b/cmake/ACL.cmake
+index aac79e0e9d..4e289b3c89 100644
+--- a/cmake/ACL.cmake
++++ b/cmake/ACL.cmake
+@@ -34,7 +34,7 @@ find_package(ACL REQUIRED)
+ set(ACL_MINIMUM_VERSION "23.11")
+ 
+ if(ACL_FOUND)
+-    file(GLOB_RECURSE ACL_VERSION_FILE $ENV{ACL_ROOT_DIR}/*/arm_compute_version.embed)
++    file(GLOB_RECURSE ACL_VERSION_FILE ${ACL_ROOT_DIR}/*/arm_compute_version.embed)
+     if ("${ACL_VERSION_FILE}" STREQUAL "")
+         message(WARNING "Build may fail: Could not determine ACL version (minimum required is ${ACL_MINIMUM_VERSION})")
+     else()
+diff --git a/cmake/FindACL.cmake b/cmake/FindACL.cmake
+index 2eaf95761e..af96b5a352 100644
+--- a/cmake/FindACL.cmake
++++ b/cmake/FindACL.cmake
+@@ -23,14 +23,15 @@
+ # Use ACL_ROOT_DIR environment variable to find the library and headers
+ find_path(ACL_INCLUDE_DIR
+   NAMES arm_compute/graph.h
+-  PATHS ENV ACL_ROOT_DIR
++  PATHS ${ACL_ROOT_DIR}
++  PATH_SUFFIXES include
+   NO_DEFAULT_PATH
+   )
+ 
+ find_library(ACL_LIBRARY
+   NAMES arm_compute
+-  PATHS ENV ACL_ROOT_DIR
+-  PATH_SUFFIXES build
++  PATHS ${ACL_ROOT_DIR}
++  PATH_SUFFIXES lib
+   NO_DEFAULT_PATH
+   )
+ 
+@@ -49,14 +50,14 @@ mark_as_advanced(
+ if(ACL_FOUND)
+   find_path(ACL_EXTRA_INCLUDE_DIR
+     NAMES half/half.hpp
+-    PATHS ENV ACL_ROOT_DIR
++    PATHS ${ACL_ROOT_DIR}
+     PATH_SUFFIXES include
+     )
+ 
+   find_library(ACL_GRAPH_LIBRARY
+     NAMES arm_compute_graph
+-    PATHS ENV ACL_ROOT_DIR
+-    PATH_SUFFIXES build
++    PATHS ${ACL_ROOT_DIR}
++    PATH_SUFFIXES lib
+     )
+ 
+   list(APPEND ACL_INCLUDE_DIRS
+-- 
+2.34.1
+
