@@ -1,0 +1,26 @@
+From 53f15454503140c817393307c2072b8763ac8b65 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingnerd@gmail.com>
+Date: Tue, 20 Jan 2026 22:01:13 +0900
+Subject: [PATCH] Fix copmpilation error (52.7.0)
+
+---
+ SConstruct | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/SConstruct b/SConstruct
+index 39c0ffdea3..feff3b3f59 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -676,6 +676,9 @@ if env['exceptions']:
+ # Unknown variables are not allowed
+ # Note: we must delay the call of UnknownVariables until after
+ # we have applied the Variables object to the construction environment
++_ = vars.UnknownVariables().pop('PREFIX', None)
++_ = vars.UnknownVariables().pop('prefix', None)
++_ = vars.UnknownVariables().pop('MAXLINELENGTH', None)
+ unknown = vars.UnknownVariables()
+ if unknown:
+     print("Unknown variables: %s" % " ".join(unknown.keys()))
+-- 
+2.43.0
+
