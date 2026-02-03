@@ -1,0 +1,82 @@
+From b7800eb317c1fffec2caf55029ecd8a60cb19f57 Mon Sep 17 00:00:00 2001
+From: t-kuha <imagingnerd@gmail.com>
+Date: Tue, 3 Feb 2026 22:59:08 +0900
+Subject: [PATCH] Workaround (1.0.1)
+
+---
+ CMakeLists.txt                       | 12 +-----------
+ extension/evalue_util/CMakeLists.txt |  2 +-
+ extension/runner_util/CMakeLists.txt |  2 +-
+ third-party/CMakeLists.txt           |  2 +-
+ 4 files changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f886cf2e86..7afda978c3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -47,7 +47,7 @@
+ 
+ # TODO Lower to 3.24 when XNNPACK dependency is updated to include
+ # https://github.com/google/XNNPACK/commit/c690daa67f883e1b627aadf7684c06797e9a0684
+-cmake_minimum_required(VERSION 3.29)
++cmake_minimum_required(VERSION 3.28)
+ project(executorch)
+ 
+ set(EXECUTORCH_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+@@ -302,16 +302,6 @@ set(_common_compile_options -Wno-deprecated-declarations -fPIC)
+ # TODO(#6475): This requires/assumes that the repo lives in a directory named
+ # exactly `executorch`. Check the assumption first. Remove this check once we
+ # stop relying on the assumption.
+-cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME _repo_dir_name)
+-if(NOT "${_repo_dir_name}" STREQUAL "executorch")
+-  message(
+-    FATAL_ERROR
+-      "The ExecuTorch repo must be cloned into a directory named exactly "
+-      "`executorch`; found `${_repo_dir_name}`. See "
+-      "https://github.com/pytorch/executorch/issues/6475 for progress on a "
+-      "fix for this restriction."
+-  )
+-endif()
+ set(_common_include_directories
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/runtime/core/portable_type/c10>
+diff --git a/extension/evalue_util/CMakeLists.txt b/extension/evalue_util/CMakeLists.txt
+index 90546b4aba..7eac1d7dc9 100644
+--- a/extension/evalue_util/CMakeLists.txt
++++ b/extension/evalue_util/CMakeLists.txt
+@@ -24,7 +24,7 @@ target_compile_options(extension_evalue_util PUBLIC ${_common_compile_options})
+ install(
+   TARGETS extension_evalue_util
+   EXPORT ExecuTorchTargets
+-  DESTINATION ${CMAKE_BINARY_DIR}/lib
++  DESTINATION lib
+   INCLUDES
+   DESTINATION ${_common_include_directories}
+ )
+diff --git a/extension/runner_util/CMakeLists.txt b/extension/runner_util/CMakeLists.txt
+index 1a9721c392..2f664615c4 100644
+--- a/extension/runner_util/CMakeLists.txt
++++ b/extension/runner_util/CMakeLists.txt
+@@ -28,7 +28,7 @@ target_compile_options(extension_runner_util PUBLIC ${_common_compile_options})
+ install(
+   TARGETS extension_runner_util
+   EXPORT ExecuTorchTargets
+-  DESTINATION ${CMAKE_BINARY_DIR}/lib
++  DESTINATION lib
+   INCLUDES
+   DESTINATION ${_common_include_directories}
+ )
+diff --git a/third-party/CMakeLists.txt b/third-party/CMakeLists.txt
+index 767ac367e1..d020eccb2f 100644
+--- a/third-party/CMakeLists.txt
++++ b/third-party/CMakeLists.txt
+@@ -128,5 +128,5 @@ add_dependencies(flatccrt flatcc_cli)
+ set_property(TARGET flatccrt PROPERTY POSITION_INDEPENDENT_CODE ON)
+ install(
+   TARGETS flatccrt
+-  DESTINATION ${CMAKE_BINARY_DIR}/lib
++  DESTINATION lib
+ )
+-- 
+2.43.0
+
